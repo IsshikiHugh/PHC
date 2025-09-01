@@ -67,6 +67,7 @@ from env.tasks import humanoid_amp_task
 import hydra
 from omegaconf import DictConfig, OmegaConf
 from easydict import EasyDict
+from phc.xy_utils import *
 
 args = None
 cfg = None
@@ -392,6 +393,7 @@ def main(cfg_hydra: DictConfig) -> None:
         )
     elif cfg.epoch == -1:
         path = osp.join(cfg.output_path, cfg_train["params"]["config"]["name"] + ".pth")
+        set_trace()
         if osp.exists(path):
             cfg_train["params"]["load_path"] = path
             cfg_train["params"]["load_checkpoint"] = True
