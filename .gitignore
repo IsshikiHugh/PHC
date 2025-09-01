@@ -118,7 +118,7 @@ celerybeat.pid
 venv/
 env.bak/
 venv.bak/
- 
+
 
 # Rope project settings
 .ropeproject
@@ -126,12 +126,13 @@ venv.bak/
 # mkdocs documentation
 /site
 
- # Pyre type checker
+# Pyre type checker
 .pyre/
 checkpoints/
 data/*
 output/
 log/
+runs
 
 *.png
 *.jpg
