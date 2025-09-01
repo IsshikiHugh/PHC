@@ -41,14 +41,14 @@ zero_out_far_train: False
 default_humanoid_mass: 51.436 # H1 config
 real_weight: True
 kp_scale: 1
-remove_toe_im: False # For imitation 
+remove_toe_im: False # For imitation
 power_reward: True
 power_coefficient: 0.0005
 
 
 powerScale: 1.0
 
-stateInit: "Random"  
+stateInit: "Random"
 hybridInitProb: 0.5
 numAMPObsSteps: 10
 

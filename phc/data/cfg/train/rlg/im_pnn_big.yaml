@@ -74,7 +74,7 @@ params:
     mini_epochs: 6
     critic_coef: 5
     clip_value: False
-    
+
     bounds_loss_coef: 10
     amp_obs_demo_buffer_size: 200000
     amp_replay_buffer_size: 200000
@@ -93,5 +93,5 @@ params:
 
     amp_dropout: False
 
-    player: 
+    player:
       games_num: 50000000

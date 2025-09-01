@@ -1,4 +1,4 @@
-# if given, will override the device setting in gym. 
+# if given, will override the device setting in gym.
 task: HumanoidIm
 project_name: "PHC"
 notes:  "VR modell, three point tracking"
@@ -27,7 +27,7 @@ shape_resampling_interval: 500
 control_mode: "isaac_pd"
 power_scale: 1.0
 controlFrequencyInv: 2 # 30 Hz
-stateInit: "Random"  
+stateInit: "Random"
 hybridInitProb: 0.5
 numAMPObsSteps: 10
 
