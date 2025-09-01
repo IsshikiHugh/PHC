@@ -262,7 +262,7 @@ python phc/run_hydra.py \
     env=env_im_getup_mcp \
     robot=smpl_humanoid \
     robot.real_weight_porpotion_boxes=False \
-    env.motion_file=sample_data/amass_isaac_standing_upright_slim.pkl \
+    env.motion_file=data/amass/amass_xy.pkl \
     env.models=['output/HumanoidIm/phc_kp_2/Humanoid.pth'] \
     env.num_prim=3 \
     env.num_envs=1 \
@@ -282,7 +282,7 @@ python phc/run_hydra.py \
     env.zero_out_far=False \
     robot.real_weight_porpotion_boxes=False \
     env.num_prim=3 \
-    env.motion_file=sample_data/amass_isaac_standing_upright_slim.pkl \
+    env.motion_file=data/amass/amass_xy.pkl \
     env.models=['output/HumanoidIm/phc_3/Humanoid.pth'] \
     env.num_envs=1 \
     headless=False \
@@ -304,7 +304,7 @@ python phc/run_hydra.py \
     robot.freeze_hand=True \
     robot.box_body=False \
     env.z_activation=relu \
-    env.motion_file=sample_data/amass_isaac_standing_upright_slim.pkl \
+    env.motion_file=data/amass/amass_xy.pkl \
     env.models=['output/HumanoidIm/phc_shape_pnn_iccv/Humanoid.pth'] \
     env.num_envs=1 \
     headless=False \
@@ -322,7 +322,7 @@ python phc/run_hydra.py \
     robot.freeze_hand=True \
     robot.box_body=False \
     env.z_activation=relu \
-    env.motion_file=sample_data/amass_isaac_standing_upright_slim.pkl \
+    env.motion_file=data/amass/amass_xy.pkl \
     env.models=['output/HumanoidIm/phc_kp_pnn_iccv/Humanoid.pth'] \
     env.num_envs=1 \
     env.obs_v=7 \
@@ -344,7 +344,7 @@ python phc/run_hydra.py \
     env.zero_out_far=False \
     robot.real_weight_porpotion_boxes=False \
     env.num_prim=3 \
-    env.motion_file=sample_data/amass_isaac_standing_upright_slim.pkl \
+    env.motion_file=data/amass/amass_xy.pkl \
     env.models=['output/HumanoidIm/phc_3/Humanoid.pth'] \
     env.num_envs=1 \
     headless=False \
@@ -363,7 +363,7 @@ python phc/run_hydra.py \
     robot.freeze_hand=True \
     robot.box_body=False \
     env.z_activation=relu \
-    env.motion_file=sample_data/amass_isaac_standing_upright_slim.pkl \
+    env.motion_file=data/amass/amass_xy.pkl \
     env.models=['output/HumanoidIm/phc_shape_pnn_iccv/Humanoid.pth'] \
     env.num_envs=1 \
     headless=False \
@@ -382,7 +382,7 @@ python phc/run_hydra.py \
     robot.freeze_hand=True \
     robot.box_body=False \
     env.z_activation=relu \
-    env.motion_file=sample_data/amass_isaac_standing_upright_slim.pkl \
+    env.motion_file=data/amass/amass_xy.pkl \
     env.models=['output/HumanoidIm/phc_kp_pnn_iccv/Humanoid.pth'] \
     env.num_envs=1024 \
     env.obs_v=7 \
@@ -403,7 +403,7 @@ python phc/run_hydra.py \
     robot=smpl_humanoid_shape \
     robot.freeze_hand=True \
     robot.box_body=False \
-    env.motion_file=sample_data/amass_isaac_standing_upright_slim.pkl \
+    env.motion_file=data/amass/amass_xy.pkl \
     env.num_envs=1 \
     headless=False
 
@@ -416,7 +416,7 @@ python phc/run_hydra.py \
     epoch=-1 \
     test=True \
     env=env_im_pnn \
-    env.motion_file=sample_data/amass_isaac_standing_upright_slim.pkl \
+    env.motion_file=data/amass/amass_xy.pkl \
     robot.freeze_hand=True \
     robot.box_body=False \
     env.num_envs=1 \
@@ -446,7 +446,7 @@ python phc/run_hydra.py \
     robot.freeze_hand=True \
     robot.box_body=False \
     env.z_activation=relu \
-    env.motion_file=sample_data/amass_isaac_standing_upright_slim.pkl \
+    env.motion_file=data/amass/amass_xy.pkl \
     env.models=['output/HumanoidIm/phc_kp_pnn_iccv/Humanoid.pth'] \
     env.num_envs=1 \
     env.obs_v=7 \
@@ -470,7 +470,7 @@ python phc/run_hydra.py \
     robot.freeze_hand=True \
     robot.box_body=False \
     env.z_activation=relu \
-    env.motion_file=sample_data/amass_isaac_standing_upright_slim.pkl \
+    env.motion_file=data/amass/amass_xy.pkl \
     env.models=['output/HumanoidIm/phc_kp_pnn_iccv/Humanoid.pth'] \
     env.num_envs=1 \
     env.obs_v=7 \
@@ -490,7 +490,7 @@ python phc/run_hydra.py \
     env=env_vr \
     robot=smpl_humanoid \
     robot.box_body=False \
-    env.motion_file=sample_data/amass_isaac_standing_upright_slim.pkl \
+    env.motion_file=data/amass/amass_xy.pkl \
     env.num_envs=1 \
     headless=False \
     epoch=-1 \
@@ -531,7 +531,7 @@ After training, you can run eval by adding `num_threads=1 headless=False test=Tr
 #### Train single primitive
 
 ```
-python phc/run_hydra.py learning=im_big exp_name=phc_prim env=env_im robot=smpl_humanoid env.motion_file=sample_data/amass_isaac_standing_upright_slim.pkl
+python phc/run_hydra.py learning=im_big exp_name=phc_prim env=env_im robot=smpl_humanoid env.motion_file=data/amass/amass_xy.pkl
 ```
 
 
@@ -576,7 +576,7 @@ When training the composer, you can repeat the process above (progressive mining
 
 You can also just train one model for imitation (no PNN):
 ```
-python phc/run_hydra.py learning=im exp_name=phc_prim_iccv  env=env_im robot=smpl_humanoid_shape robot.freeze_hand=True robot.box_body=False env.motion_file=sample_data/amass_isaac_standing_upright_slim.pkl
+python phc/run_hydra.py learning=im exp_name=phc_prim_iccv  env=env_im robot=smpl_humanoid_shape robot.freeze_hand=True robot.box_body=False env.motion_file=data/amass/amass_xy.pkl
 ```
 
 </details>
