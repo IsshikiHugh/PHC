@@ -21,13 +21,36 @@ from poselib.poselib.skeleton.skeleton3d import (
 from smpl_sim.smpllib.smpl_joint_names import SMPL_MUJOCO_NAMES, SMPL_BONE_ORDER_NAMES
 from smpl_sim.smpllib.smpl_local_robot import SMPL_Robot as LocalRobot
 
+from phc.xy_utils import *
+
+AMASS_SPLITS = {
+    "vald": ["HumanEva", "MPI_HDM05", "SFU", "MPI_mosh"],
+    "test": ["Transitions_mocap", "SSM_synced"],
+    "train": [
+        "CMU",
+        "MPI_Limits",
+        "TotalCapture",
+        "KIT",
+        "EKUT",
+        "TCD_handMocap",
+        "BMLhandball",
+        "DanceDB",
+        "ACCAD",
+        "BMLmovi",
+        "BioMotionLab_NTroje",
+        "Eyes_Japan_Dataset",
+        "DFaust_67",
+    ],  # Adding ACCAD
+}
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--debug", action="store_true", default=False)
     parser.add_argument("--path", type=str, default="")
-    parser.add_argument("--process_split", type=str, default="train")
-    parser.add_argument("--upright_start", action="store_true", default=False)
+    parser.add_argument(
+        "--process_split", type=str, required=True, choices=list(AMASS_SPLITS.keys())
+    )
+    parser.add_argument("--upright_start", action="store_true", default=True)
     args = parser.parse_args()
 
     process_split = args.process_split
@@ -58,37 +81,22 @@ if __name__ == "__main__":
     )
     if not osp.isdir(args.path):
         print("Please specify AMASS data path")
-        import ipdb
 
-        ipdb.set_trace()
+        set_trace()
 
     all_pkls = glob.glob(f"{args.path}/**/*.npz", recursive=True)
     amass_occlusion = joblib.load("sample_data/amass_copycat_occlusion_v3.pkl")
     amass_full_motion_dict = {}
-    amass_splits = {
-        "vald": ["HumanEva", "MPI_HDM05", "SFU", "MPI_mosh"],
-        "test": ["Transitions_mocap", "SSM_synced"],
-        "train": [
-            "CMU",
-            "MPI_Limits",
-            "TotalCapture",
-            "KIT",
-            "EKUT",
-            "TCD_handMocap",
-            "BMLhandball",
-            "DanceDB",
-            "ACCAD",
-            "BMLmovi",
-            "BioMotionLab_NTroje",
-            "Eyes_Japan_Dataset",
-            "DFaust_67",
-        ],  # Adding ACCAD
-    }
-    process_set = amass_splits[process_split]
+
+    process_set = AMASS_SPLITS[process_split]
     length_acc = []
     for data_path in tqdm(all_pkls):
         bound = 0
-        splits = data_path.split("/")[7:]
+
+        print(data_path)
+        print(data_path.split("/"))
+        set_trace()
+        splits = data_path.split("/")[7:]  # Modify this on next run.
         key_name_dump = "0-" + "_".join(splits).replace(".npz", "")
 
         if not splits[0] in process_set:
@@ -204,16 +212,17 @@ if __name__ == "__main__":
 
         amass_full_motion_dict[key_name_dump] = new_motion_out
 
-    import ipdb
+    # set_trace()
 
-    ipdb.set_trace()
     if upright_start:
         joblib.dump(
             amass_full_motion_dict,
-            "data/amass/amass_train_take6_upright.pkl",
+            f"data/amass/amass_{process_split}_upright.pkl",
             compress=True,
         )
     else:
         joblib.dump(
-            amass_full_motion_dict, "data/amass/amass_train_take6.pkl", compress=True
+            amass_full_motion_dict,
+            f"data/amass/amass_{process_split}.pkl",
+            compress=True,
         )
