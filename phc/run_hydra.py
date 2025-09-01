@@ -53,7 +53,6 @@ from phc.utils.flags import flags
 import numpy as np
 import copy
 import torch
-import wandb
 
 from learning import im_amp
 from learning import im_amp_players
@@ -156,7 +155,6 @@ def create_rlgpu_env(**kwargs):
 
 
 class RLGPUAlgoObserver(AlgoObserver):
-
     def __init__(self, use_successes=True):
         self.use_successes = use_successes
         return
@@ -203,7 +201,6 @@ class RLGPUAlgoObserver(AlgoObserver):
 
 
 class RLGPUEnv(vecenv.IVecEnv):
-
     def __init__(self, config_name, num_actors, **kwargs):
         self.env = env_configurations.configurations[config_name]["env_creator"](
             **kwargs
@@ -375,16 +372,6 @@ def main(cfg_hydra: DictConfig) -> None:
 
     cfg.train = not cfg.test
     project_name = cfg.get("project_name", "egoquest")
-    if (not cfg.no_log) and (not cfg.test) and (not cfg.debug):
-        wandb.init(
-            project=project_name,
-            resume=not cfg.resume_str is None,
-            id=cfg.resume_str,
-            notes=cfg.get("notes", "no notes"),
-        )
-        wandb.config.update(cfg, allow_val_change=True)
-        wandb.run.name = cfg.exp_name
-        wandb.run.save()
 
     set_seed(cfg.get("seed", -1), cfg.get("torch_deterministic", False))
 
