@@ -32,7 +32,9 @@ python phc/run_hydra.py \
     env.models=['output/HumanoidIm/phc_3/Humanoid.pth'] \
     env.num_envs=512 \
     epoch=-1 \
-    headless=False \
+    headless=True \
     test=True \
-    im_eval=True
+    im_eval=True \
+    collect_dataset=True \
+    no_virtual_display=True
 ```
