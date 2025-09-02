@@ -22,6 +22,9 @@ import random
 from phc.utils.flags import flags
 from enum import Enum
 
+from phc.xy_utils import *
+
+
 USE_CACHE = False
 print("MOVING MOTION DATA TO GPU, USING CACHE:", USE_CACHE)
 
@@ -36,7 +39,6 @@ if not USE_CACHE:
     old_numpy = torch.Tensor.numpy
 
     class Patch:
-
         def numpy(self):
             if self.is_cuda:
                 return self.to("cpu").numpy()
@@ -75,7 +77,6 @@ def compute_motion_dof_vels(motion):
 
 
 class DeviceCache:
-
     def __init__(self, obj, device):
         self.obj = obj
         self.device = device
@@ -118,7 +119,6 @@ class MotionlibMode(Enum):
 
 
 class MotionLibBase:
-
     def __init__(self, motion_lib_cfg):
         self.m_cfg = motion_lib_cfg
         self._sim_fps = 1 / self.m_cfg.get("step_dt", 1 / 30)
@@ -133,7 +133,8 @@ class MotionLibBase:
             im_eval=self.m_cfg.im_eval,
         )
         self.setup_constants(
-            fix_height=self.m_cfg.fix_height, multi_thread=self.m_cfg.multi_thread
+            fix_height=self.m_cfg.fix_height,
+            multi_thread=self.m_cfg.multi_thread,
         )
 
         if flags.real_traj:
@@ -267,26 +268,32 @@ class MotionLibBase:
         gc.collect()
 
         total_len = 0.0
-        self.num_joints = len(skeleton_trees[0].node_names)
-        num_motion_to_load = len(skeleton_trees)
+        self.num_joints = len(skeleton_trees[0].node_names)  # [YX 9.2] 69
+        num_motion_to_load = len(skeleton_trees)  #  [YX 9.2] n_env=512
 
-        if random_sample:
+        if random_sample:  # not activated in eval mode
             sample_idxes = torch.multinomial(
-                self._sampling_prob, num_samples=num_motion_to_load, replacement=True
+                self._sampling_prob,
+                num_samples=num_motion_to_load,
+                replacement=True,
             ).to(self._device)
         else:
             sample_idxes = torch.remainder(
-                torch.arange(len(skeleton_trees)) + start_idx, self._num_unique_motions
+                torch.arange(num_motion_to_load) + start_idx,
+                self._num_unique_motions,  # #sequence in the dataset
             ).to(self._device)
 
         # import ipdb; ipdb.set_trace()
         self._curr_motion_ids = sample_idxes
+
+        # Testing for obs_v5
         self.one_hot_motions = torch.nn.functional.one_hot(
-            self._curr_motion_ids, num_classes=self._num_unique_motions
-        ).to(
-            self._device
-        )  # Testing for obs_v5
+            self._curr_motion_ids,
+            num_classes=self._num_unique_motions,
+        ).to(self._device)
+
         self.curr_motion_keys = self._motion_data_keys[sample_idxes]
+        # Probability of sampling this one motion in the batch.
         self._sampling_batch_prob = (
             self._sampling_prob[self._curr_motion_ids]
             / self._sampling_prob[self._curr_motion_ids].sum()
@@ -304,7 +311,12 @@ class MotionLibBase:
             "*********************************************************************************\n"
         )
 
+        # ========== Process data with multiprocessing ========== #
+
+        # Collect necessary information.
         motion_data_list = self._motion_data_list[sample_idxes.cpu().numpy()]
+
+        # Set up multiprocessing.
         torch.set_num_threads(1)
         mp.set_sharing_strategy("file_descriptor")
 
@@ -320,22 +332,23 @@ class MotionLibBase:
         res_acc = {}  # using dictionary ensures order of the results.
         jobs = motion_data_list
         chunk = np.ceil(len(jobs) / num_jobs).astype(int)
-        ids = np.arange(len(jobs))
+        ids = np.arange(len(jobs))  # number in the batch
 
         jobs = [
             (
-                ids[i : i + chunk],
-                jobs[i : i + chunk],
-                skeleton_trees[i : i + chunk],
-                gender_betas[i : i + chunk],
-                self.mesh_parsers,
-                self.m_cfg,
+                ids[i : i + chunk],  # ids
+                jobs[i : i + chunk],  # motion_data_list
+                skeleton_trees[i : i + chunk],  # skeleton_trees
+                gender_betas[i : i + chunk],  # shape_params
+                self.mesh_parsers,  # mesh_parsers
+                self.m_cfg,  # config
             )
             for i in range(0, len(jobs), chunk)
         ]
-        job_args = [jobs[i] for i in range(len(jobs))]
+
+        # Parallelly process jobs, calculate some rotation velocity things.
         for i in range(1, len(jobs)):
-            worker_args = (*job_args[i], queue, i)
+            worker_args = (*jobs[i], queue, i)
             worker = mp.Process(target=self.load_motion_with_skeleton, args=worker_args)
             worker.start()
         res_acc.update(self.load_motion_with_skeleton(*jobs[0], None, 0))
@@ -343,6 +356,13 @@ class MotionLibBase:
         for i in tqdm(range(len(jobs) - 1)):
             res = queue.get()
             res_acc.update(res)
+
+        # [YX 9.2] res_acc = {
+        #     <id>: (
+        #         dict(keys=['pose_quat_global', 'pose_quat', 'trans_orig', 'root_trans_offset', 'beta', 'gender', 'pose_aa', 'fps'])
+        #         'SkeletonMotion' object
+        #     )
+        # }
 
         for f in tqdm(range(len(res_acc))):
             motion_file_data, curr_motion = res_acc[f]
@@ -378,6 +398,7 @@ class MotionLibBase:
 
             del curr_motion
 
+        # Pack the data and move them to tensor and cuda.
         self._motion_lengths = torch.tensor(
             self._motion_lengths, device=self._device, dtype=torch.float32
         )

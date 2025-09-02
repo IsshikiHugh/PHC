@@ -25,6 +25,8 @@ from phc.utils.motion_lib_base import (
     FixHeightMode,
 )
 from smpl_sim.utils.torch_ext import to_torch
+from phc.xy_utils import *
+
 
 USE_CACHE = False
 print("MOVING MOTION DATA TO GPU, USING CACHE:", USE_CACHE)
@@ -33,7 +35,6 @@ if not USE_CACHE:
     old_numpy = torch.Tensor.numpy
 
     class Patch:
-
         def numpy(self):
             if self.is_cuda:
                 return self.to("cpu").numpy()
@@ -44,7 +45,6 @@ if not USE_CACHE:
 
 
 class MotionLibSMPL(MotionLibBase):
-
     def __init__(self, motion_lib_cfg):
         super().__init__(motion_lib_cfg=motion_lib_cfg)
 
@@ -93,7 +93,11 @@ class MotionLibSMPL(MotionLibBase):
 
     @staticmethod
     def fix_trans_height(
-        pose_aa, trans, curr_gender_betas, mesh_parsers, fix_height_mode
+        pose_aa,
+        trans,
+        curr_gender_betas,
+        mesh_parsers,
+        fix_height_mode,
     ):
         if fix_height_mode == FixHeightMode.no_fix:
             return trans, 0
@@ -105,7 +109,9 @@ class MotionLibSMPL(MotionLibBase):
             mesh_parser = mesh_parsers[gender.item()]
             height_tolorance = 0.0
             vertices_curr, joints_curr = mesh_parser.get_joints_verts(
-                pose_aa[:frame_check], betas[None,], trans[:frame_check]
+                pose_aa[:frame_check],
+                betas[None,],
+                trans[:frame_check],
             )
 
             offset = (
@@ -146,7 +152,7 @@ class MotionLibSMPL(MotionLibBase):
                     - height_tolorance
                 ).min()  # Only acount the first 30 frames, which usually is a calibration phase.
             elif fix_height_mode == FixHeightMode.full_fix:
-
+                # set_trace()  # [YX 9.2]
                 diff_fix = (
                     (vertices_curr - offset[:, None])[:frame_check, ..., -1]
                     .min(dim=-1)
@@ -168,6 +174,7 @@ class MotionLibSMPL(MotionLibBase):
         queue,
         pid,
     ):
+        # set_trace()  # [YX 9.2]
         # ZL: loading motion with the specified skeleton. Perfoming forward kinematics to get the joint positions
         max_len = config.max_length
         fix_height = config.fix_height
@@ -183,14 +190,16 @@ class MotionLibSMPL(MotionLibBase):
         for f in pbar:
             curr_id = ids[f]  # id for this datasample
             curr_file = motion_data_list[f]
+            # Load if not loaded.
             if not isinstance(curr_file, dict) and osp.isfile(curr_file):
                 key = motion_data_list[f].split("/")[-1].split(".")[0]
                 curr_file = joblib.load(curr_file)[key]
+
             curr_gender_beta = shape_params[f]
 
             seq_len = curr_file["root_trans_offset"].shape[0]
-            if max_len == -1 or seq_len < max_len:
-                start, end = 0, seq_len
+            if max_len == -1 or seq_len < max_len:  # for eval, max_len=-1
+                start, end = 0, seq_len  # select the whole sequence
             else:
                 start = random.randint(0, seq_len - max_len)
                 end = start + max_len
@@ -202,6 +211,7 @@ class MotionLibSMPL(MotionLibBase):
             B, J, N = pose_quat_global.shape
 
             ##### ZL: randomize the heading ######
+            # YX: not activated for evaluation
             if (not flags.im_eval) and (not flags.test):
                 # if True:
                 random_rot = np.zeros(3)
@@ -224,6 +234,7 @@ class MotionLibSMPL(MotionLibBase):
             ##### ZL: randomize the heading ######
 
             if not mesh_parsers is None:
+                # YX: seems like just put the human to the ground
                 trans, trans_fix = MotionLibSMPL.fix_trans_height(
                     pose_aa,
                     trans,
@@ -236,14 +247,19 @@ class MotionLibSMPL(MotionLibBase):
 
             pose_quat_global = to_torch(pose_quat_global)
             sk_state = SkeletonState.from_rotation_and_root_translation(
-                skeleton_trees[f], pose_quat_global, trans, is_local=False
+                skeleton_trees[f],
+                pose_quat_global,
+                trans,
+                is_local=False,
             )
 
             curr_motion = SkeletonMotion.from_skeleton_state(
-                sk_state, curr_file.get("fps", 30)
+                sk_state,
+                curr_file.get("fps", 30),
             )
             curr_dof_vels = compute_motion_dof_vels(curr_motion)
 
+            # set_trace()  # [YX 9.2]
             if flags.real_traj:
                 quest_sensor_data = to_torch(curr_file["quest_sensor_data"])
                 quest_trans = quest_sensor_data[..., :3]

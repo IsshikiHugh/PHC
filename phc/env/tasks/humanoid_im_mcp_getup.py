@@ -23,9 +23,9 @@ from collections import deque
 
 
 class HumanoidImMCPGetup(
-    humanoid_im_getup.HumanoidImGetup, humanoid_im_mcp.HumanoidImMCP
+    humanoid_im_getup.HumanoidImGetup,
+    humanoid_im_mcp.HumanoidImMCP,
 ):
-
     def __init__(
         self, cfg, sim_params, physics_engine, device_type, device_id, headless
     ):
