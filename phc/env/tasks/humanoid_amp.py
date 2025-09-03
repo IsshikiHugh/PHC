@@ -75,7 +75,6 @@ HACK_OUTPUT_MOTION_ALL = False
 
 
 class HumanoidAMP(Humanoid):
-
     class StateInit(Enum):
         Default = 0
         Start = 1
@@ -83,7 +82,13 @@ class HumanoidAMP(Humanoid):
         Hybrid = 3
 
     def __init__(
-        self, cfg, sim_params, physics_engine, device_type, device_id, headless
+        self,
+        cfg,
+        sim_params,
+        physics_engine,
+        device_type,
+        device_id,
+        headless,
     ):
         if HACK_MOTION_SYNC or HACK_CONSISTENCY_TEST:
             control_freq_inv = cfg["env"]["controlFrequencyInv"]
@@ -127,6 +132,7 @@ class HumanoidAMP(Humanoid):
         self._motion_start_times = torch.zeros(self.num_envs).to(self.device)
         self._sampled_motion_ids = torch.zeros(self.num_envs).long().to(self.device)
         motion_file = cfg["env"]["motion_file"]
+
         self._load_motion(motion_file)
 
         self._amp_obs_buf = torch.zeros(
@@ -141,9 +147,7 @@ class HumanoidAMP(Humanoid):
 
         data_dir = "data/smpl"
 
-        if self.humanoid_type in [
-            "smpl",
-        ]:
+        if self.humanoid_type in ["smpl"]:
             self.smpl_parser_n = SMPL_Parser(model_path=data_dir, gender="neutral").to(
                 self.device
             )
@@ -260,9 +264,9 @@ class HumanoidAMP(Humanoid):
         self._compute_amp_observations()
 
         amp_obs_flat = self._amp_obs_buf.view(-1, self.get_num_amp_obs())
-        self.extras["amp_obs"] = (
-            amp_obs_flat  ## ZL: hooks for adding amp_obs for trianing
-        )
+        self.extras[
+            "amp_obs"
+        ] = amp_obs_flat  ## ZL: hooks for adding amp_obs for trianing
         return
 
     def get_num_amp_obs(self):
@@ -415,9 +419,15 @@ class HumanoidAMP(Humanoid):
                 self._has_upright_start,
             )
         else:
-            root_pos, root_rot, dof_pos, root_vel, root_ang_vel, dof_vel, key_pos = (
-                self._motion_lib.get_motion_state_amp(motion_ids, motion_times)
-            )
+            (
+                root_pos,
+                root_rot,
+                dof_pos,
+                root_vel,
+                root_ang_vel,
+                dof_vel,
+                key_pos,
+            ) = self._motion_lib.get_motion_state_amp(motion_ids, motion_times)
 
             amp_obs_demo = build_amp_observations(
                 root_pos,
@@ -727,12 +737,12 @@ class HumanoidAMP(Humanoid):
             + (self.ref_motion_cache["offset"] - offset).abs().sum()
             > 0
         ):
-            self.ref_motion_cache["motion_ids"] = (
-                motion_ids.clone()
-            )  # need to clone; otherwise will be overriden
-            self.ref_motion_cache["motion_times"] = (
-                motion_times.clone()
-            )  # need to clone; otherwise will be overriden
+            self.ref_motion_cache[
+                "motion_ids"
+            ] = motion_ids.clone()  # need to clone; otherwise will be overriden
+            self.ref_motion_cache[
+                "motion_times"
+            ] = motion_times.clone()  # need to clone; otherwise will be overriden
             self.ref_motion_cache["offset"] = (
                 offset.clone() if not offset is None else None
             )
@@ -747,7 +757,6 @@ class HumanoidAMP(Humanoid):
         return self.ref_motion_cache
 
     def _sample_ref_state(self, env_ids):
-
         num_envs = env_ids.shape[0]
         motion_ids = self._motion_lib.sample_motions(num_envs)
 
@@ -815,9 +824,15 @@ class HumanoidAMP(Humanoid):
             )
 
         else:
-            root_pos, root_rot, dof_pos, root_vel, root_ang_vel, dof_vel, key_pos = (
-                self._motion_lib.get_motion_state_amp(motion_ids, motion_times)
-            )
+            (
+                root_pos,
+                root_rot,
+                dof_pos,
+                root_vel,
+                root_ang_vel,
+                dof_vel,
+                key_pos,
+            ) = self._motion_lib.get_motion_state_amp(motion_ids, motion_times)
             rb_pos, rb_rot = None, None
 
         return (
@@ -1003,9 +1018,15 @@ class HumanoidAMP(Humanoid):
             )
 
         else:
-            root_pos, root_rot, dof_pos, root_vel, root_ang_vel, dof_vel, key_pos = (
-                self._motion_lib.get_motion_state_amp(motion_ids, motion_times)
-            )
+            (
+                root_pos,
+                root_rot,
+                dof_pos,
+                root_vel,
+                root_ang_vel,
+                dof_vel,
+                key_pos,
+            ) = self._motion_lib.get_motion_state_amp(motion_ids, motion_times)
             amp_obs_demo = build_amp_observations(
                 root_pos,
                 root_rot,
@@ -1060,7 +1081,6 @@ class HumanoidAMP(Humanoid):
         return
 
     def _refresh_sim_tensors(self):
-
         self.gym.refresh_dof_state_tensor(self.sim)
         self.gym.refresh_actor_root_state_tensor(self.sim)
         self.gym.refresh_rigid_body_state_tensor(self.sim)
@@ -1165,26 +1185,26 @@ class HumanoidAMP(Humanoid):
             if len(env_ids) == 0:
                 return
             if self.humanoid_type in ["h1", "g1", "smpl", "smplh", "smplx"]:
-                self._curr_amp_obs_buf[env_ids] = (
-                    self._compute_amp_observations_from_state(
-                        self._rigid_body_pos[env_ids][:, 0, :],
-                        self._rigid_body_rot[env_ids][:, 0, :],
-                        self._rigid_body_vel[env_ids][:, 0, :],
-                        self._rigid_body_ang_vel[env_ids][:, 0, :],
-                        self._dof_pos[env_ids],
-                        self._dof_vel[env_ids],
-                        key_body_pos[env_ids],
-                        key_body_vel[env_ids],
-                        self.humanoid_shapes[env_ids],
-                        self.humanoid_limb_and_weights[env_ids],
-                        self.dof_subset,
-                        self._local_root_obs,
-                        self._amp_root_height_obs,
-                        self._has_dof_subset,
-                        self._has_shape_obs_disc,
-                        self._has_limb_weight_obs_disc,
-                        self._has_upright_start,
-                    )
+                self._curr_amp_obs_buf[
+                    env_ids
+                ] = self._compute_amp_observations_from_state(
+                    self._rigid_body_pos[env_ids][:, 0, :],
+                    self._rigid_body_rot[env_ids][:, 0, :],
+                    self._rigid_body_vel[env_ids][:, 0, :],
+                    self._rigid_body_ang_vel[env_ids][:, 0, :],
+                    self._dof_pos[env_ids],
+                    self._dof_vel[env_ids],
+                    key_body_pos[env_ids],
+                    key_body_vel[env_ids],
+                    self.humanoid_shapes[env_ids],
+                    self.humanoid_limb_and_weights[env_ids],
+                    self.dof_subset,
+                    self._local_root_obs,
+                    self._amp_root_height_obs,
+                    self._has_dof_subset,
+                    self._has_shape_obs_disc,
+                    self._has_limb_weight_obs_disc,
+                    self._has_upright_start,
                 )
             else:
                 self._curr_amp_obs_buf[env_ids] = build_amp_observations(
@@ -1287,7 +1307,6 @@ class HumanoidAMP(Humanoid):
             )
 
     def _hack_motion_sync(self):
-
         if not hasattr(self, "_hack_motion_time"):
             self._hack_motion_time = 0.0
 
@@ -1343,9 +1362,15 @@ class HumanoidAMP(Humanoid):
             # root_pos[...,-1] += 0.03 # ALways slightly above the ground to avoid issue
 
         else:
-            root_pos, root_rot, dof_pos, root_vel, root_ang_vel, dof_vel, key_pos = (
-                self._motion_lib.get_motion_state_amp(motion_ids, motion_times)
-            )
+            (
+                root_pos,
+                root_rot,
+                dof_pos,
+                root_vel,
+                root_ang_vel,
+                dof_vel,
+                key_pos,
+            ) = self._motion_lib.get_motion_state_amp(motion_ids, motion_times)
             rb_pos, rb_rot = None, None
 
         env_ids = torch.arange(self.num_envs, dtype=torch.long, device=self.device)
@@ -1423,9 +1448,15 @@ class HumanoidAMP(Humanoid):
 
         motion_ids = np.array([0] * self.num_envs, dtype=np.int)
         motion_times = np.array([self._hack_motion_time] * self.num_envs)
-        root_pos, root_rot, dof_pos, root_vel, root_ang_vel, dof_vel, key_pos = (
-            self._motion_lib.get_motion_state_amp(motion_ids, motion_times)
-        )
+        (
+            root_pos,
+            root_rot,
+            dof_pos,
+            root_vel,
+            root_ang_vel,
+            dof_vel,
+            key_pos,
+        ) = self._motion_lib.get_motion_state_amp(motion_ids, motion_times)
 
         env_ids = torch.arange(self.num_envs, dtype=torch.long, device=self.device)
         self._set_env_state(

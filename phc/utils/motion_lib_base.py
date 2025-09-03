@@ -353,6 +353,7 @@ class MotionLibBase:
             worker.start()
         res_acc.update(self.load_motion_with_skeleton(*jobs[0], None, 0))
 
+        print("!!LOADING MOTION HAPPENS!!")
         for i in tqdm(range(len(jobs) - 1)):
             res = queue.get()
             res_acc.update(res)

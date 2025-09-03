@@ -466,7 +466,7 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
             self._motion_eval_lib = MotionLibSMPL(motion_lib_cfg)
 
             self._motion_lib: MotionLibSMPL = self._motion_train_lib
-            set_trace()  # [YX 9.2]
+            # set_trace()  # [YX 9.2]
             self._motion_lib.load_motions(
                 skeleton_trees=self.skeleton_trees,
                 gender_betas=self.humanoid_shapes.cpu(),
