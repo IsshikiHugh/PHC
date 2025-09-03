@@ -20,6 +20,7 @@ from smpl_sim.smpllib.smpl_eval import compute_metrics_lite
 from rl_games.common.tr_helpers import unsqueeze_obs
 from datetime import datetime
 import copy
+from phc.xy_utils import *
 
 COLLECT_Z = False
 
@@ -40,9 +41,9 @@ class IMAMPPlayerContinuous(amp_players.AMPPlayerContinuous):
             self.zs, self.zs_all = [], []
 
         humanoid_env = self.env.task
-        humanoid_env._termination_distances[:] = (
-            0.5  # if not humanoid_env.strict_eval else 0.25 # ZL: use UHC's termination distance
-        )
+        humanoid_env._termination_distances[
+            :
+        ] = 0.5  # if not humanoid_env.strict_eval else 0.25 # ZL: use UHC's termination distance
         humanoid_env._recovery_episode_prob, humanoid_env._fall_init_prob = 0, 0
 
         if humanoid_env.collect_dataset:
@@ -80,9 +81,11 @@ class IMAMPPlayerContinuous(amp_players.AMPPlayerContinuous):
 
         # modify done such that games will exit and reset.
         if flags.im_eval:
-
+            # [YX 9.3] For eval AMASS with rot+kp PHC3 model
+            # humanoid_env = <phc.env.tasks.humanoid_im_mcp_getup.HumanoidImMCPGetup object at 0x7f7ed410f1f0>
             humanoid_env = self.env.task
 
+            # Calculate termination (instead of done)
             termination_state = torch.logical_and(
                 self.curr_stpes <= humanoid_env._motion_lib.get_motion_num_steps() - 1,
                 info["terminate"],
@@ -91,25 +94,33 @@ class IMAMPPlayerContinuous(amp_players.AMPPlayerContinuous):
             self.terminate_state = torch.logical_or(
                 termination_state, self.terminate_state
             )
-            if (~self.terminate_state).sum() > 0:
+
+            # Dynamically calculate the max motion length: `curr_max`.
+            # When some motions are terminated, their lenghes won't contribute to max motion length.
+            if (~self.terminate_state).sum() > 0:  # if not all are terminated
                 max_possible_id = humanoid_env._motion_lib._num_unique_motions - 1
                 curr_ids = humanoid_env._motion_lib._curr_motion_ids
-                if (
-                    max_possible_id == curr_ids
-                ).sum() > 0:  # When you are running out of motions.
+
+                if (max_possible_id == curr_ids).sum() > 0:  # final motion id in cur
+                    # When running out of motions.
+                    # Find the end in this batch, and only verify all the motion above.
                     bound = (max_possible_id == curr_ids).nonzero()[0] + 1
-                    if (~self.terminate_state[:bound]).sum() > 0:
-                        curr_max = humanoid_env._motion_lib.get_motion_num_steps()[
-                            :bound
-                        ][~self.terminate_state[:bound]].max()
+                    active_mask = ~self.terminate_state[:bound]  # active valid motion
+                    if active_mask.sum() > 0:
+                        # Find the max motion length in motions that:
+                        # 1. are not terminated
+                        # 2. before the final motion sequence
+                        all_mot_steps = humanoid_env._motion_lib.get_motion_num_steps()
+                        valid_motion_steps = all_mot_steps[:bound]
+                        curr_max = valid_motion_steps[active_mask].max()
                     else:
-                        curr_max = (
-                            self.curr_stpes - 1
-                        )  # the ones that should be counted have teimrated
+                        # the ones that should be counted have terminated
+                        curr_max = self.curr_stpes - 1
                 else:
-                    curr_max = humanoid_env._motion_lib.get_motion_num_steps()[
-                        ~self.terminate_state
-                    ].max()
+                    # When the whole batch is valid.
+                    active_mask = ~self.terminate_state
+                    all_mot_steps = humanoid_env._motion_lib.get_motion_num_steps()
+                    curr_max = all_mot_steps[active_mask].max()
 
                 if self.curr_stpes >= curr_max:
                     curr_max = (
@@ -118,7 +129,10 @@ class IMAMPPlayerContinuous(amp_players.AMPPlayerContinuous):
             else:
                 curr_max = humanoid_env._motion_lib.get_motion_num_steps().max()
 
+            # Collect data for dumping.
+            # 🟣 What's I am interested in.
             if humanoid_env.collect_dataset:
+                # set_trace()  # [YX 9.3]
                 self.obs_buf.append(info["obs_buf"])
                 self.clean_actions.append(info["clean_actions"])
                 self.env_actions.append(info["actions"])
@@ -135,14 +149,12 @@ class IMAMPPlayerContinuous(amp_players.AMPPlayerContinuous):
                 self.curr_stpes >= curr_max
                 or self.terminate_state.sum() == humanoid_env.num_envs
             ):
-
                 self.terminate_memory.append(self.terminate_state.cpu().numpy())
-                self.success_rate = (
-                    1
-                    - np.concatenate(self.terminate_memory)[
-                        : humanoid_env._motion_lib._num_unique_motions
-                    ].mean()
-                )
+
+                terminate_rate = np.concatenate(self.terminate_memory)[
+                    : humanoid_env._motion_lib._num_unique_motions
+                ].mean()
+                self.success_rate = 1 - terminate_rate  # will update each time
 
                 # MPJPE
                 all_mpjpe = torch.stack(self.mpjpe)
@@ -361,9 +373,9 @@ class IMAMPPlayerContinuous(amp_players.AMPPlayerContinuous):
                         )
                         exit()
 
-                    import ipdb
+                    # import ipdb
 
-                    ipdb.set_trace()
+                    # ipdb.set_trace()
 
                     joblib.dump(
                         failed_keys, osp.join(self.config["network_path"], "failed.pkl")
@@ -374,10 +386,11 @@ class IMAMPPlayerContinuous(amp_players.AMPPlayerContinuous):
                     )
                     print("....")
 
-                done[:] = (
-                    1  # Turning all of the sequences done and reset for the next batch of eval.
-                )
+                done[
+                    :
+                ] = 1  # Turning all of the sequences done and reset for the next batch of eval.
 
+                # [YX 9.3] Move to next batch.
                 humanoid_env.forward_motion_samples()
                 self.terminate_state = torch.zeros(
                     self.env.task.num_envs, device=self.device
@@ -427,6 +440,8 @@ class IMAMPPlayerContinuous(amp_players.AMPPlayerContinuous):
             return z
 
     def run(self):
+        from phc.xy_utils import set_trace
+
         n_games = self.games_num
         render = self.render_env
         n_game_life = self.n_game_life
@@ -450,6 +465,7 @@ class IMAMPPlayerContinuous(amp_players.AMPPlayerContinuous):
         for t in range(n_games):
             if games_played >= n_games:
                 break
+
             obs_dict = self.env_reset()
 
             batch_size = 1
@@ -468,6 +484,7 @@ class IMAMPPlayerContinuous(amp_players.AMPPlayerContinuous):
 
             with torch.no_grad():
                 for n in range(self.max_steps):
+                    # if done_indices is empty, then it won't influence the data
                     obs_dict = self.env_reset(done_indices)
 
                     if COLLECT_Z:
@@ -500,6 +517,8 @@ class IMAMPPlayerContinuous(amp_players.AMPPlayerContinuous):
                     games_played += done_count
 
                     if done_count > 0:
+                        set_trace()  # [YX 9.3]
+
                         if self.is_rnn:
                             for s in self.states:
                                 s[:, all_done_indices, :] = (

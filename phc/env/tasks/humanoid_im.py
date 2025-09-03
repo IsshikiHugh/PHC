@@ -33,9 +33,10 @@ from collections import deque
 from tqdm import tqdm
 import copy
 
+from phc.xy_utils import *
+
 
 class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
-
     def __init__(
         self, cfg, sim_params, physics_engine, device_type, device_id, headless
     ):
@@ -439,12 +440,33 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
                     "step_dt": self.dt,
                 }
             )
+
+            # [YX 9.2]
+            # 🟣 Related research report:
+            # https://www.notion.so/isshikih/Inspect-PHC-25d4a0907d4e801e9223f2b4c8dce8bc?source=copy_link#2614a0907d4e80039a09f657e744c60f
+            #
+            # motion_lib_cfg = {
+            #     "motion_file"       : "data/amass/amass_xy.pkl",
+            #     "device"            : "cuda:0",
+            #     "fix_height"        : <FixHeightMode.full_fix  : 1>,
+            #     "min_length"        : -1,
+            #     "max_length"        : -1,
+            #     "im_eval"           : True,
+            #     "multi_thread"      : False,
+            #     "smpl_type"         : "smpl",
+            #     "randomrize_heading": True,
+            #     "step_dt"           : 0.03333333507180214,
+            # }
+
             motion_eval_file = motion_train_file
             self._motion_train_lib = MotionLibSMPL(motion_lib_cfg)
+
+            # [YX 9.2] `self._motion_eval_lib` seems useless in this setting.
             motion_lib_cfg.im_eval = True
             self._motion_eval_lib = MotionLibSMPL(motion_lib_cfg)
 
-            self._motion_lib = self._motion_train_lib
+            self._motion_lib: MotionLibSMPL = self._motion_train_lib
+            # set_trace()  # [YX 9.2]
             self._motion_lib.load_motions(
                 skeleton_trees=self.skeleton_trees,
                 gender_betas=self.humanoid_shapes.cpu(),
@@ -678,7 +700,6 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
             elif self.obs_v == 3:  # reduced number
                 obs_size = len(self._track_bodies) * self._num_traj_samples * 9
             elif self.obs_v == 4:  # 10 steps + v6
-
                 # obs_size = len(self._track_bodies) * self._num_traj_samples * 15 * 5
                 obs_size = len(self._track_bodies) * 15
                 obs_size += len(self._track_bodies) * self._num_traj_samples * 9
@@ -797,7 +818,6 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
 
     def _update_marker(self):
         if flags.show_traj:
-
             motion_times = (
                 (self.progress_buf + 1) * self.dt
                 + self._motion_start_times
@@ -1194,7 +1214,6 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
             or self.obs_v == 8
             or self.obs_v == 9
         ):
-
             if self.zero_out_far:
                 close_distance = self.close_distance
                 distance = torch.norm(root_pos - ref_rb_pos_subset[..., 0, :], dim=-1)
@@ -1314,7 +1333,6 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
                 obs = obs.view(curr_num_envs, -1)
 
         elif self.obs_v == 7:
-
             if self.zero_out_far:
                 close_distance = self.close_distance
                 distance = torch.norm(root_pos - ref_rb_pos_subset[..., 0, :], dim=-1)
@@ -1548,9 +1566,9 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
             )
             # power_reward = -0.00005 * (power ** 2)
             power_reward = -self.power_coefficient * power
-            power_reward[self.progress_buf <= 3] = (
-                0  # First 3 frame power reward should not be counted. since they could be dropped.
-            )
+            power_reward[
+                self.progress_buf <= 3
+            ] = 0  # First 3 frame power reward should not be counted. since they could be dropped.
 
             self.rew_buf[:] += power_reward
             self.reward_raw = torch.cat(
@@ -1611,12 +1629,12 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
             + (self.ref_motion_cache["offset"] - offset).abs().sum()
             > 0
         ):
-            self.ref_motion_cache["motion_ids"] = (
-                motion_ids.clone()
-            )  # need to clone; otherwise will be overriden
-            self.ref_motion_cache["motion_times"] = (
-                motion_times.clone()
-            )  # need to clone; otherwise will be overriden
+            self.ref_motion_cache[
+                "motion_ids"
+            ] = motion_ids.clone()  # need to clone; otherwise will be overriden
+            self.ref_motion_cache[
+                "motion_times"
+            ] = motion_times.clone()  # need to clone; otherwise will be overriden
             self.ref_motion_cache["offset"] = (
                 offset.clone() if not offset is None else None
             )
@@ -1686,10 +1704,16 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
             )
 
         else:
-            root_pos, root_rot, dof_pos, root_vel, root_ang_vel, dof_vel, key_pos = (
-                self._motion_lib.get_motion_state(
-                    self._sampled_motion_ids[env_ids], motion_times
-                )
+            (
+                root_pos,
+                root_rot,
+                dof_pos,
+                root_vel,
+                root_ang_vel,
+                dof_vel,
+                key_pos,
+            ) = self._motion_lib.get_motion_state(
+                self._sampled_motion_ids[env_ids], motion_times
             )
             rb_pos, rb_rot = None, None
 
@@ -1756,9 +1780,15 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
 
             root_pos[..., -1] += 0.03  # ALways slightly above the ground to avoid issue
         else:
-            root_pos, root_rot, dof_pos, root_vel, root_ang_vel, dof_vel, key_pos = (
-                self._motion_lib.get_motion_state(motion_ids, motion_times)
-            )
+            (
+                root_pos,
+                root_rot,
+                dof_pos,
+                root_vel,
+                root_ang_vel,
+                dof_vel,
+                key_pos,
+            ) = self._motion_lib.get_motion_state(motion_ids, motion_times)
             rb_pos, rb_rot = None, None
 
         env_ids = torch.arange(self.num_envs, dtype=torch.long, device=self.device)
@@ -1830,7 +1860,6 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
         return pd_tar
 
     def pre_physics_step(self, actions):
-
         super().pre_physics_step(actions)
         self._update_cycle_count()
 
@@ -1871,7 +1900,6 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
                         + torch.rand(pass_time_motion_len.sum(), 2).to(self.device)
                     )  # one meter
                 elif self.zero_out_far and self.zero_out_far_train:
-
                     max_distance = 5
                     num_cycle_motion = pass_time_motion_len.sum()
                     rand_distance = (
@@ -1959,20 +1987,21 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
 
             # self.reset_buf, self._terminate_buf = compute_humanoid_traj_reset(  # traj reset
             #     self.reset_buf, self.progress_buf, self._contact_forces, self._contact_body_ids, self._rigid_body_pos, pass_time_max, self._enable_early_termination, 0.3, flags.no_collision_check)
-            self.reset_buf[:], self._terminate_buf[:] = (
-                compute_humanoid_im_reset(  # Humanoid reset
-                    self.reset_buf,
-                    self.progress_buf,
-                    self._contact_forces,
-                    self._contact_body_ids,
-                    self._rigid_body_pos[..., self._reset_bodies_id, :],
-                    ref_rb_pos[..., self._reset_bodies_id, :],
-                    pass_time,
-                    self._enable_early_termination,
-                    self._termination_distances[..., self._reset_bodies_id],
-                    flags.no_collision_check,
-                    flags.im_eval and (not self.strict_eval),
-                )
+            (
+                self.reset_buf[:],
+                self._terminate_buf[:],
+            ) = compute_humanoid_im_reset(  # Humanoid reset
+                self.reset_buf,
+                self.progress_buf,
+                self._contact_forces,
+                self._contact_body_ids,
+                self._rigid_body_pos[..., self._reset_bodies_id, :],
+                ref_rb_pos[..., self._reset_bodies_id, :],
+                pass_time,
+                self._enable_early_termination,
+                self._termination_distances[..., self._reset_bodies_id],
+                flags.no_collision_check,
+                flags.im_eval and (not self.strict_eval),
             )
 
         else:
@@ -1980,9 +2009,9 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
             ref_body_pos = ref_rb_pos[..., self._reset_bodies_id, :].clone()
 
             if self._occl_training:
-                ref_body_pos[self.random_occlu_idx[:, self._reset_bodies_id]] = (
-                    body_pos[self.random_occlu_idx[:, self._reset_bodies_id]]
-                )
+                ref_body_pos[
+                    self.random_occlu_idx[:, self._reset_bodies_id]
+                ] = body_pos[self.random_occlu_idx[:, self._reset_bodies_id]]
 
             self.reset_buf[:], self._terminate_buf[:] = compute_humanoid_im_reset(
                 self.reset_buf,
