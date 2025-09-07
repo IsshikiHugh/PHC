@@ -580,7 +580,8 @@ class SkeletonState(Serializable):
             - global_positions[:, right_hip_index].numpy()
         )
         side_direction = (
-            side_direction / np.sqrt((side_direction**2).sum(axis=-1))[..., np.newaxis]
+            side_direction
+            / np.sqrt((side_direction**2).sum(axis=-1))[..., np.newaxis]
         )
 
         # Forward direction obtained by crossing with the up direction.
@@ -925,11 +926,11 @@ class SkeletonState(Serializable):
         target_tpose_global_rotation = source_state.global_rotation[0, :].clone()
         for current_index, name in enumerate(current_skeleton_tree):
             if name in target_tpose.skeleton_tree:
-                target_tpose_global_rotation[current_index, :] = (
-                    target_tpose.global_rotation[
-                        target_tpose.skeleton_tree.index(name), :
-                    ]
-                )
+                target_tpose_global_rotation[
+                    current_index, :
+                ] = target_tpose.global_rotation[
+                    target_tpose.skeleton_tree.index(name), :
+                ]
 
         global_rotation_diff = quat_mul_norm(
             source_state.global_rotation, quat_inverse(source_tpose.global_rotation)
@@ -1009,7 +1010,6 @@ class SkeletonState(Serializable):
 
 
 class SkeletonMotion(SkeletonState):
-
     def __init__(self, tensor_backend, skeleton_tree, is_local, fps, *args, **kwargs):
         self._fps = fps
         super().__init__(tensor_backend, skeleton_tree, is_local, *args, **kwargs)

@@ -172,7 +172,6 @@ def main():
     vertices_acc = []
 
     for entry_key, data_seq in tqdm(items):
-
         gender, beta = data_seq["betas"][0], data_seq["betas"][1:]
         if gender == 0:
             smpl_parser = smpl_parser_n

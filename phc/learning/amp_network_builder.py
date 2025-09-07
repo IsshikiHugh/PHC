@@ -9,13 +9,11 @@ DISC_LOGIT_INIT_SCALE = 1.0
 
 
 class AMPBuilder(network_builder.A2CBuilder):
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         return
 
     class Network(network_builder.A2CBuilder.Network):
-
         def __init__(self, params, **kwargs):
             super().__init__(params, **kwargs)
 
@@ -149,7 +147,6 @@ class AMPBuilder(network_builder.A2CBuilder):
                     return (logits,)
 
                 if self.is_continuous:
-
                     mu = self.mu_act(self.mu(a_out))
                     if self.space_config["fixed_sigma"]:
                         sigma = mu * 0.0 + self.sigma_act(self.sigma)

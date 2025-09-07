@@ -517,7 +517,7 @@ class IMAMPPlayerContinuous(amp_players.AMPPlayerContinuous):
                     games_played += done_count
 
                     if done_count > 0:
-                        set_trace()  # [YX 9.3]
+                        # set_trace()  # [YX 9.3]
 
                         if self.is_rnn:
                             for s in self.states:

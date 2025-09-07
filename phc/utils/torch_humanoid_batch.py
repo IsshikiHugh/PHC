@@ -37,7 +37,6 @@ logging.basicConfig(
 
 
 class Humanoid_Batch:
-
     def __init__(self, cfg, device=torch.device("cpu")):
         self.cfg = cfg
         self.mjcf_file = cfg.asset.assetFileName

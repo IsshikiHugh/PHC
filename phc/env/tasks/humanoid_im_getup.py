@@ -40,11 +40,9 @@ from phc.utils.flags import flags
 
 
 class HumanoidImGetup(HumanoidIm):
-
     def __init__(
         self, cfg, sim_params, physics_engine, device_type, device_id, headless
     ):
-
         self._recovery_episode_prob_tgt = self._recovery_episode_prob = cfg["env"][
             "recoveryEpisodeProb"
         ]
@@ -170,9 +168,9 @@ class HumanoidImGetup(HumanoidIm):
         return
 
     def _reset_actors(self, env_ids):
-        self.availalbe_fall_states[self.fall_id_assignments[env_ids]] = (
-            0  # Clear out the assignment counters for these ones
-        )
+        self.availalbe_fall_states[
+            self.fall_id_assignments[env_ids]
+        ] = 0  # Clear out the assignment counters for these ones
         num_envs = env_ids.shape[0]  # For these enviorments
         recovery_probs = to_torch(
             np.array([self._recovery_episode_prob] * num_envs), device=self.device
@@ -217,9 +215,9 @@ class HumanoidImGetup(HumanoidIm):
 
     def _reset_fall_episode(self, env_ids):
         # fall_state_ids = torch.randperm(self._fall_root_states.shape[0])[:env_ids.shape[0]]
-        self.availalbe_fall_states[self.fall_id_assignments[env_ids]] = (
-            0  # ZL: Clear out the assignment counters for these ones. Clean out self. Should not need to do this?
-        )
+        self.availalbe_fall_states[
+            self.fall_id_assignments[env_ids]
+        ] = 0  # ZL: Clear out the assignment counters for these ones. Clean out self. Should not need to do this?
         available_fall_ids = (self.availalbe_fall_states == 0).nonzero()
         assert available_fall_ids.shape[0] >= env_ids.shape[0]
         fall_state_ids = available_fall_ids[

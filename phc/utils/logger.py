@@ -52,7 +52,6 @@ _logger.addHandler(con_handler)
 
 
 class GLOBAL_PATH(object):
-
     def __init__(self, path=None):
         if path is None:
             path = os.getcwd()

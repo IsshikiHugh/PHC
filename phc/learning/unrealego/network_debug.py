@@ -104,7 +104,6 @@ def print_network_param(net, name):
 
 
 def init_net(net, init_type="normal", gpu_ids=[], init_ImageNet=True):
-
     if len(gpu_ids) > 0:
         assert torch.cuda.is_available()
         # net = torch.nn.DataParallel(net, gpu_ids)
@@ -162,7 +161,6 @@ def freeze_bn_affine(m):
 
 
 def define_HeatMap(opt, model):
-
     if model == "egoglass":
         net = HeatMap_EgoGlass(opt)
     elif model == "unrealego_heatmap_shared":
@@ -176,7 +174,6 @@ def define_HeatMap(opt, model):
 
 
 def define_AutoEncoder(opt, model):
-
     if model == "egoglass":
         net = AutoEncoder(opt, input_channel_scale=2)
     elif model == "unrealego_autoencoder":
@@ -277,7 +274,6 @@ class HeatMap_EgoGlass(nn.Module):
         self.after_backbone = HeatMap_EgoGlass_AfterBackbone(opt)
 
     def forward(self, input):
-
         x = self.backbone(input)
         output = self.after_backbone(x)
 
@@ -309,7 +305,6 @@ class HeatMap_EgoGlass_Backbone(nn.Module):
         self.layer4 = self.base_layers[7]  # size=(N, 512, x.H/32, x.W/32)
 
     def forward(self, input):
-
         layer0 = self.layer0(input)
         layer1 = self.layer1(layer0)
         layer2 = self.layer2(layer1)
@@ -347,7 +342,6 @@ class HeatMap_EgoGlass_AfterBackbone(nn.Module):
         self.conv_heatmap = nn.Conv2d(256, self.num_heatmap, 1)
 
     def forward(self, list_input):
-
         input = list_input[0]
         layer0 = list_input[1]
         layer1 = list_input[2]
@@ -389,7 +383,6 @@ class HeatMap_UnrealEgo_Shared(nn.Module):
         )
 
     def forward(self, input_left, input_right):
-
         x_left, x_right = self.backbone(input_left, input_right)
         output = self.after_backbone(x_left, x_right)
 
@@ -437,7 +430,6 @@ class Encoder_Block(nn.Module):
         self.layer4 = self.base_layers[7]  # size=(N, 512, x.H/32, x.W/32)
 
     def forward(self, input):
-
         layer0 = self.layer0(input)
         layer1 = self.layer1(layer0)
         layer2 = self.layer2(layer1)
@@ -524,7 +516,6 @@ class HeatMap_UnrealEgo_AfterBackbone(nn.Module):
 
 
 class AutoEncoder(nn.Module):
-
     def __init__(self, opt, input_channel_scale=1, fc_dim=16384):
         super(AutoEncoder, self).__init__()
 
@@ -651,7 +642,6 @@ class AutoEncoder(nn.Module):
 
 
 if __name__ == "__main__":
-
     model = HeatMap_UnrealEgo_Shared(opt=None, model_name="resnet50")
 
     input = torch.rand(3, 3, 256, 256)

@@ -12,7 +12,6 @@ DISC_LOGIT_INIT_SCALE = 1.0
 
 
 class AMPPNNBuilder(AMPBuilder):
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         return
@@ -22,7 +21,6 @@ class AMPPNNBuilder(AMPBuilder):
         return net
 
     class Network(AMPBuilder.Network):
-
         def __init__(self, params, **kwargs):
             self.self_obs_size = kwargs["self_obs_size"]
             self.task_obs_size = kwargs["task_obs_size"]

@@ -13,7 +13,6 @@ from phc.learning.mlp import MLP
 
 
 class HumanoidImMCP(humanoid_im.HumanoidIm):
-
     def __init__(
         self, cfg, sim_params, physics_engine, device_type, device_id, headless
     ):
@@ -76,7 +75,6 @@ class HumanoidImMCP(humanoid_im.HumanoidIm):
         return task_obs_detail
 
     def step(self, weights):
-
         # if self.dr_randomizations.get('actions', None):
         #     actions = self.dr_randomizations['actions']['noise_lambda'](actions)
         # if flags.server_mode:

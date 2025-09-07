@@ -31,7 +31,6 @@ def init_mlp(net, init_func):
 
 
 class NetworkBuilder:
-
     def __init__(self, **kwargs):
         pass
 
@@ -45,7 +44,6 @@ class NetworkBuilder:
         return self.build(name, **kwargs)
 
     class BaseNetwork(nn.Module):
-
         def __init__(self, **kwargs):
             nn.Module.__init__(self, **kwargs)
 
@@ -272,7 +270,6 @@ class NetworkBuilder:
 
 
 class A2CBuilder(NetworkBuilder):
-
     def __init__(self, **kwargs):
         NetworkBuilder.__init__(self)
 
@@ -280,7 +277,6 @@ class A2CBuilder(NetworkBuilder):
         self.params = params
 
     class Network(NetworkBuilder.BaseNetwork):
-
         def __init__(self, params, **kwargs):
             actions_num = kwargs.pop("actions_num")
             input_shape = kwargs.pop("input_shape")
@@ -643,7 +639,6 @@ class A2CBuilder(NetworkBuilder):
 
 
 class Conv2dAuto(nn.Conv2d):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.padding = (
@@ -653,7 +648,6 @@ class Conv2dAuto(nn.Conv2d):
 
 
 class ConvBlock(nn.Module):
-
     def __init__(self, in_channels, out_channels, use_bn=False):
         super().__init__()
         self.use_bn = use_bn
@@ -675,7 +669,6 @@ class ConvBlock(nn.Module):
 
 
 class ResidualBlock(nn.Module):
-
     def __init__(
         self,
         channels,
@@ -715,7 +708,6 @@ class ResidualBlock(nn.Module):
 
 
 class ImpalaSequential(nn.Module):
-
     def __init__(
         self,
         in_channels,
@@ -749,7 +741,6 @@ class ImpalaSequential(nn.Module):
 
 
 class A2CResnetBuilder(NetworkBuilder):
-
     def __init__(self, **kwargs):
         NetworkBuilder.__init__(self)
 
@@ -757,7 +748,6 @@ class A2CResnetBuilder(NetworkBuilder):
         self.params = params
 
     class Network(NetworkBuilder.BaseNetwork):
-
         def __init__(self, params, **kwargs):
             actions_num = kwargs.pop("actions_num")
             input_shape = kwargs.pop("input_shape")
@@ -1009,7 +999,6 @@ class DoubleQCritic(NetworkBuilder.BaseNetwork):
 
 
 class SACBuilder(NetworkBuilder):
-
     def __init__(self, **kwargs):
         NetworkBuilder.__init__(self)
 
@@ -1021,7 +1010,6 @@ class SACBuilder(NetworkBuilder):
         return net
 
     class Network(NetworkBuilder.BaseNetwork):
-
         def __init__(self, params, **kwargs):
             actions_num = kwargs.pop("actions_num")
             input_shape = kwargs.pop("input_shape")

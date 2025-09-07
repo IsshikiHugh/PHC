@@ -36,7 +36,6 @@ from phc.utils.draw_utils import agt_color, get_color_gradient
 
 
 class HumanoidTeleop(humanoid_im.HumanoidIm):
-
     def __init__(
         self, cfg, sim_params, physics_engine, device_type, device_id, headless
     ):
@@ -86,7 +85,6 @@ class HumanoidTeleop(humanoid_im.HumanoidIm):
             )
 
         if self.cfg.domain_rand.randomize_ctrl_delay:
-
             self.action_queue = torch.zeros(
                 self.num_envs,
                 self.cfg.domain_rand.ctrl_delay_step_range[1] + 1,
@@ -374,9 +372,9 @@ class HumanoidTeleop(humanoid_im.HumanoidIm):
             )
             # power_reward = -0.00005 * (power ** 2)
             power_reward = -self.power_coefficient * power
-            power_reward[self.progress_buf <= 3] = (
-                0  # First 3 frame power reward should not be counted. since they could be dropped.
-            )
+            power_reward[
+                self.progress_buf <= 3
+            ] = 0  # First 3 frame power reward should not be counted. since they could be dropped.
 
             self.rew_buf[:] += power_reward
             self.reward_raw = torch.cat(

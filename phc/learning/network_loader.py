@@ -128,7 +128,6 @@ def load_z_encoder(checkpoint, activation="relu", z_type="sphere", device="cpu")
 
 
 def load_mlp(loading_keys, checkpoint, actvation_func):
-
     loading_keys_linear = [k for k in loading_keys if k.endswith("weight")]
     nn_modules = []
     for idx, key in enumerate(loading_keys_linear):

@@ -6,7 +6,6 @@ import math
 
 
 class PositionalEncoding(nn.Module):
-
     def __init__(self, d_model, dropout=0.1, max_len=5000):
         super(PositionalEncoding, self).__init__()
         self.dropout = nn.Dropout(p=dropout)
@@ -30,7 +29,6 @@ class PositionalEncoding(nn.Module):
 
 # only for ablation / not used in the final model
 class TimeEncoding(nn.Module):
-
     def __init__(self, d_model, dropout=0.1, max_len=5000):
         super(TimeEncoding, self).__init__()
         self.dropout = nn.Dropout(p=dropout)
@@ -45,7 +43,6 @@ class TimeEncoding(nn.Module):
 
 
 class Encoder_TRANSFORMER(nn.Module):
-
     def __init__(
         self,
         modeltype,
@@ -123,7 +120,6 @@ class Encoder_TRANSFORMER(nn.Module):
 
 
 class Decoder_TRANSFORMER(nn.Module):
-
     def __init__(
         self,
         modeltype,

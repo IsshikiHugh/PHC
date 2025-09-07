@@ -48,7 +48,6 @@ class TrajGenerator:
         accel_max,
         sharp_turn_prob,
     ):
-
         self._device = device
         self._dt = episode_dur / (num_verts - 1)
         self._dtheta_max = dtheta_max

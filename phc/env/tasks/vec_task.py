@@ -36,7 +36,6 @@ import numpy as np
 
 # VecEnv Wrapper for RL training
 class VecTask:
-
     def __init__(self, task, rl_device, clip_observations=5.0):
         self.task = task
 
@@ -98,7 +97,6 @@ class VecTask:
 
 # C++ CPU Class
 class VecTaskCPU(VecTask):
-
     def __init__(self, task, rl_device, sync_frame_time=False, clip_observations=5.0):
         super().__init__(task, rl_device, clip_observations=clip_observations)
         self.sync_frame_time = sync_frame_time
@@ -137,7 +135,6 @@ class VecTaskCPU(VecTask):
 
 # C++ GPU Class
 class VecTaskGPU(VecTask):
-
     def __init__(self, task, rl_device, clip_observations=5.0):
         super().__init__(task, rl_device, clip_observations=clip_observations)
 
@@ -184,14 +181,12 @@ class VecTaskGPU(VecTask):
 
 # Python CPU/GPU Class
 class VecTaskPython(VecTask):
-
     def get_state(self):
         return torch.clamp(self.task.states_buf, -self.clip_obs, self.clip_obs).to(
             self.rl_device
         )
 
     def step(self, actions):
-
         self.task.step(actions)
 
         return (

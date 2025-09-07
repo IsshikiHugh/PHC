@@ -7,7 +7,6 @@ from tqdm import tqdm
 
 
 class PNN(NetworkBuilder.BaseNetwork):
-
     def __init__(self, mlp_args, output_size=69, numCols=4, has_lateral=True):
         super(PNN, self).__init__()
         self.numCols = numCols
@@ -21,7 +20,6 @@ class PNN(NetworkBuilder.BaseNetwork):
             self.actors.append(mlp)
 
         if self.has_lateral:
-
             self.u = nn.ModuleList()
 
             for i in range(numCols - 1):

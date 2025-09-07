@@ -105,7 +105,6 @@ class UnrealEgoHeatmapSharedModel(BaseModel):
         self.scaler.scale(loss_total).backward()
 
     def optimize_parameters(self):
-
         # set model trainable
         self.net_HeatMap.train()
 

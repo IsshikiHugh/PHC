@@ -53,6 +53,8 @@ import gc
 import torch.multiprocessing as mp
 from phc.utils.draw_utils import agt_color, get_color_gradient
 
+from phc.xy_utils import *
+
 
 ENABLE_MAX_COORD_OBS = True
 # PERTURB_OBJS = [
@@ -77,7 +79,6 @@ PERTURB_OBJS = [
 
 
 class Humanoid(BaseTask):
-
     def __init__(
         self, cfg, sim_params, physics_engine, device_type, device_id, headless
     ):
@@ -883,7 +884,6 @@ class Humanoid(BaseTask):
 
     def _reset_envs(self, env_ids):
         if len(env_ids) > 0:
-
             self._reset_actors(
                 env_ids
             )  # this funciton calle _set_env_state, and should set all state vectors
@@ -948,7 +948,6 @@ class Humanoid(BaseTask):
         return
 
     def _setup_character_props(self, key_bodies):
-
         asset_file = self.cfg.robot.asset.assetFileName
         num_key_bodies = len(key_bodies)
 
@@ -1177,7 +1176,6 @@ class Humanoid(BaseTask):
             asset_options.default_dof_drive_mode = gymapi.DOF_MODE_NONE
 
             if self.has_shape_variation:
-
                 queue = mp.Queue()
                 num_jobs = min(mp.cpu_count(), 64)
                 if num_jobs <= 8 or self.cfg.disable_multiprocessing:
@@ -1304,7 +1302,6 @@ class Humanoid(BaseTask):
             self.skeleton_trees = [sk_tree] * num_envs
 
         else:
-
             asset_path = os.path.join(asset_root, asset_file)
             asset_root = os.path.dirname(asset_path)
             asset_file = os.path.basename(asset_path)
@@ -1361,7 +1358,6 @@ class Humanoid(BaseTask):
         # self.gym.set_actor_dof_properties(self.envs[0], self.humanoid_handles[0], dof_prop)
 
         for j in range(self.num_dof):
-
             if dof_prop["lower"][j] > dof_prop["upper"][j]:
                 self.dof_limits_lower.append(dof_prop["upper"][j])
                 self.dof_limits_upper.append(dof_prop["lower"][j])
@@ -2169,7 +2165,6 @@ class Humanoid(BaseTask):
             self._pd_action_scale[self._R_knee_dof_idx] = 5
 
             if self._has_smpl_pd_offset:
-
                 if self._has_upright_start:
                     self._pd_action_offset[self._dof_names.index("L_Shoulder") * 3] = (
                         -np.pi / 2
@@ -2232,8 +2227,10 @@ class Humanoid(BaseTask):
         return
 
     def _compute_humanoid_obs(self, env_ids=None):
+        # [YX 9.5] obs calculation (inner)
+        # set_trace()
         with torch.no_grad():
-            if ENABLE_MAX_COORD_OBS:
+            if ENABLE_MAX_COORD_OBS:  # [YX 9.5] ENABLE_MAX_COORD_OBS=True
                 if env_ids is None:
                     body_pos = self._rigid_body_pos
                     body_rot = self._rigid_body_rot
@@ -2294,7 +2291,7 @@ class Humanoid(BaseTask):
                         limb_weights = self.humanoid_limb_and_weights
                     else:
                         body_shape_params = (
-                            self.humanoid_shapes[env_ids, :-6]
+                            self.humanoid_shapes[env_ids, :-6]  # [YX 9.5] SMPL 10 betas
                             if self.humanoid_type in ["smpl", "smplh", "smplx"]
                             else self.humanoid_shapes[env_ids]
                         )
@@ -2313,7 +2310,7 @@ class Humanoid(BaseTask):
                             self._has_upright_start,
                             self._has_shape_obs,
                             self._has_limb_weight_obs,
-                        )
+                        )  # (L, 358)
                     elif self.self_obs_v == 2:
                         obs = compute_humanoid_observations_smpl_max_v2(
                             body_pos,
@@ -2518,7 +2515,6 @@ class Humanoid(BaseTask):
         actions_scaled = actions * self.cfg.control.action_scale  # 0.5
         # print(actions)
         if control_type == "P":  # default
-
             torques = (
                 self.p_gains * (actions_scaled + self.default_dof_pos - self._dof_pos)
                 - self.d_gains * self._dof_vel
@@ -2543,7 +2539,6 @@ class Humanoid(BaseTask):
 
             if not self.paused and self.enable_viewer_sync:
                 if self.control_mode in ["pd"]:
-
                     self.torques = self._compute_torques(self.actions)
 
                     self.gym.set_dof_actuation_force_tensor(
@@ -3076,7 +3071,7 @@ def compute_humanoid_observations_smpl(
     return obs
 
 
-@torch.jit.script
+@torch.jit.script  # Temporarily comment for debugging.
 def compute_humanoid_observations_smpl_max(
     body_pos,
     body_rot,
@@ -3090,6 +3085,8 @@ def compute_humanoid_observations_smpl_max(
     has_smpl_params,
     has_limb_weight_params,
 ):
+    # fmt: off
+    # [YX 9.5] How the self_obs is calculated.
     # type: (Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, bool, bool, bool, bool, bool) -> Tensor
     root_pos = body_pos[:, 0, :]
     root_rot = body_rot[:, 0, :]
@@ -3106,71 +3103,54 @@ def compute_humanoid_observations_smpl_max(
 
     heading_rot_inv_expand = heading_rot_inv.unsqueeze(-2)
     heading_rot_inv_expand = heading_rot_inv_expand.repeat((1, body_pos.shape[1], 1))
-    flat_heading_rot_inv = heading_rot_inv_expand.reshape(
-        heading_rot_inv_expand.shape[0] * heading_rot_inv_expand.shape[1],
-        heading_rot_inv_expand.shape[2],
-    )
+    flat_heading_rot_inv = heading_rot_inv_expand.reshape(heading_rot_inv_expand.shape[0] * heading_rot_inv_expand.shape[1], heading_rot_inv_expand.shape[2])
 
     root_pos_expand = root_pos.unsqueeze(-2)
-    local_body_pos = body_pos - root_pos_expand
-    flat_local_body_pos = local_body_pos.reshape(
-        local_body_pos.shape[0] * local_body_pos.shape[1], local_body_pos.shape[2]
-    )
-    flat_local_body_pos = torch_utils.my_quat_rotate(
-        flat_heading_rot_inv, flat_local_body_pos
-    )
-    local_body_pos = flat_local_body_pos.reshape(
-        local_body_pos.shape[0], local_body_pos.shape[1] * local_body_pos.shape[2]
-    )
+    local_body_pos = body_pos - root_pos_expand  # position related to root
+    # [YX 9.5] normalize the heading directions
+    flat_local_body_pos = local_body_pos.reshape(local_body_pos.shape[0] * local_body_pos.shape[1], local_body_pos.shape[2])
+    flat_local_body_pos = torch_utils.my_quat_rotate(flat_heading_rot_inv, flat_local_body_pos)
+    local_body_pos = flat_local_body_pos.reshape(local_body_pos.shape[0], local_body_pos.shape[1] * local_body_pos.shape[2])
     local_body_pos = local_body_pos[..., 3:]  # remove root pos
 
-    flat_body_rot = body_rot.reshape(
-        body_rot.shape[0] * body_rot.shape[1], body_rot.shape[2]
-    )  # This is global rotation of the body
+    # This rotation is the rotation in quaternion, after FK.
+    flat_body_rot = body_rot.reshape(body_rot.shape[0] * body_rot.shape[1], body_rot.shape[2])  # The global rotation of the body
     flat_local_body_rot = quat_mul(flat_heading_rot_inv, flat_body_rot)
     flat_local_body_rot_obs = torch_utils.quat_to_tan_norm(flat_local_body_rot)
-    local_body_rot_obs = flat_local_body_rot_obs.reshape(
-        body_rot.shape[0], body_rot.shape[1] * flat_local_body_rot_obs.shape[1]
-    )
+    local_body_rot_obs = flat_local_body_rot_obs.reshape(body_rot.shape[0], body_rot.shape[1] * flat_local_body_rot_obs.shape[1])
 
-    if not (local_root_obs):
+    if not (local_root_obs):  # [YX 9.5] local_root_obs = True
         root_rot_obs = torch_utils.quat_to_tan_norm(
             root_rot
         )  # If not local root obs, you override it.
         local_body_rot_obs[..., 0:6] = root_rot_obs
 
-    flat_body_vel = body_vel.reshape(
-        body_vel.shape[0] * body_vel.shape[1], body_vel.shape[2]
-    )
-    flat_local_body_vel = torch_utils.my_quat_rotate(
-        flat_heading_rot_inv, flat_body_vel
-    )
-    local_body_vel = flat_local_body_vel.reshape(
-        body_vel.shape[0], body_vel.shape[1] * body_vel.shape[2]
-    )
+    flat_body_vel = body_vel.reshape(body_vel.shape[0] * body_vel.shape[1], body_vel.shape[2])
+    flat_local_body_vel = torch_utils.my_quat_rotate(flat_heading_rot_inv, flat_body_vel)
+    local_body_vel = flat_local_body_vel.reshape(body_vel.shape[0], body_vel.shape[1] * body_vel.shape[2])
 
-    flat_body_ang_vel = body_ang_vel.reshape(
-        body_ang_vel.shape[0] * body_ang_vel.shape[1], body_ang_vel.shape[2]
-    )
-    flat_local_body_ang_vel = torch_utils.my_quat_rotate(
-        flat_heading_rot_inv, flat_body_ang_vel
-    )
-    local_body_ang_vel = flat_local_body_ang_vel.reshape(
-        body_ang_vel.shape[0], body_ang_vel.shape[1] * body_ang_vel.shape[2]
-    )
+    flat_body_ang_vel = body_ang_vel.reshape(body_ang_vel.shape[0] * body_ang_vel.shape[1], body_ang_vel.shape[2])
+    flat_local_body_ang_vel = torch_utils.my_quat_rotate(flat_heading_rot_inv, flat_body_ang_vel)
+    local_body_ang_vel = flat_local_body_ang_vel.reshape(body_ang_vel.shape[0], body_ang_vel.shape[1] * body_ang_vel.shape[2])
 
     obs_list = []
-    if root_height_obs:
-        obs_list.append(root_h_obs)
-    obs_list += [local_body_pos, local_body_rot_obs, local_body_vel, local_body_ang_vel]
+    if root_height_obs:  # True
+        obs_list.append(root_h_obs)  # (L, 1)
+    obs_list += [
+        local_body_pos,      # (L,  69=23*3)
+        local_body_rot_obs,  # (L, 144=24*6)
+        local_body_vel,      # (L,  72=24*3)
+        local_body_ang_vel,  # (L,  72=24*3)
+    ]
 
-    if has_smpl_params:
+    if has_smpl_params:  # False
         obs_list.append(smpl_params)
 
-    if has_limb_weight_params:
+    if has_limb_weight_params:  # False
         obs_list.append(limb_weight_params)
 
     obs = torch.cat(obs_list, dim=-1)
+    # fmt: on
     return obs
 
 

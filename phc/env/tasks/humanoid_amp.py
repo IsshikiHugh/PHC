@@ -66,6 +66,8 @@ from smpl_sim.smpllib.smpl_parser import (
 import gc
 from phc.utils.flags import flags
 from collections import OrderedDict
+from phc.xy_utils import *
+
 
 HACK_MOTION_SYNC = False
 # HACK_MOTION_SYNC = True
@@ -201,6 +203,7 @@ class HumanoidAMP(Humanoid):
         if env_ids is None:
             env_ids = torch.arange(self.num_envs).to(self.device)
         obs = self._compute_humanoid_obs(env_ids)
+        set_trace()  # [YX 9.7]
 
         if self.obs_v == 2:
             # Double sub will return a copy.
@@ -916,8 +919,11 @@ class HumanoidAMP(Humanoid):
         return
 
     def _compute_humanoid_obs(self, env_ids=None):
+        # [YX 9.5] obs calculation.
         obs = super()._compute_humanoid_obs(env_ids)
 
+        # [YX 9.5] False for rot+kp AMASS eval.
+        set_trace()  # [YX 9.7]
         if self._enable_hist_obs:
             if env_ids is None:
                 hist_obs = self._amp_obs_buf.view(-1, self.get_num_amp_obs())

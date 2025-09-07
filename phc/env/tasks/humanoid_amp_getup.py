@@ -42,7 +42,6 @@ class HumanoidAMPGetup(HumanoidAMP):
     def __init__(
         self, cfg, sim_params, physics_engine, device_type, device_id, headless
     ):
-
         self._recovery_episode_prob = cfg["env"]["recoveryEpisodeProb"]
         self._recovery_steps = cfg["env"]["recoverySteps"]
         self._fall_init_prob = cfg["env"]["fallInitProb"]

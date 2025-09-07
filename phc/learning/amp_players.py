@@ -136,7 +136,6 @@ class AMPPlayerContinuous(common_player.CommonPlayer):
         return self.model.a2c_network.eval_actor(input)
 
     def _preproc_obs(self, obs_batch):
-
         if type(obs_batch) is dict:
             for k, v in obs_batch.items():
                 obs_batch[k] = self._preproc_obs(v)
@@ -263,9 +262,9 @@ class AMPPlayerDiscrete(common_player.CommonPlayerDiscrete):
 
         else:
             config["amp_input_shape"] = self.env_info["amp_observation_space"]
-            config["task_obs_size_detail"] = (
-                self.vec_env.env.task.get_task_obs_size_detail()
-            )
+            config[
+                "task_obs_size_detail"
+            ] = self.vec_env.env.task.get_task_obs_size_detail()
             if self.env.task.has_task:
                 config["self_obs_size"] = self.vec_env.env.task.get_self_obs_size()
                 config["task_obs_size"] = self.vec_env.env.task.get_task_obs_size()
@@ -289,7 +288,6 @@ class AMPPlayerDiscrete(common_player.CommonPlayerDiscrete):
         return self.model.a2c_network.eval_actor(input)
 
     def _preproc_obs(self, obs_batch):
-
         if type(obs_batch) is dict:
             for k, v in obs_batch.items():
                 obs_batch[k] = self._preproc_obs(v)

@@ -263,7 +263,6 @@ def _get_animation_curve(joint, fbx_scene):
 
 
 def _get_skeleton(root_joint):
-
     # Do a depth first search of the skeleton to extract all the joints
     joint_list = [root_joint]
     joint_names = [root_joint.GetName()]
@@ -303,7 +302,6 @@ def _recursive_to_list(array):
 
 
 if __name__ == "__main__":
-
     # Read in the input and output files, then read the fbx
     file_name_in, file_name_out = sys.argv[1:3]
     root_joint_name = sys.argv[3]

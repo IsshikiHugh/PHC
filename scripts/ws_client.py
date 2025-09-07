@@ -17,7 +17,6 @@ async def main():
     session = aiohttp.ClientSession()
     URL = f"http://{HOST}:{PORT}/ws_talk"
     async with session.ws_connect(URL) as ws:
-
         await prompt_and_send(ws)
         async for msg in ws:
             print("Message received from server:", msg.data)

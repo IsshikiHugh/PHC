@@ -8,7 +8,6 @@ updates statistic from a full data
 
 
 class RunningMeanStd(nn.Module):
-
     def __init__(self, insize, epsilon=1e-05, per_channel=False, norm_only=False):
         super(RunningMeanStd, self).__init__()
         print("RunningMeanStd: ", insize)
@@ -135,7 +134,6 @@ class RunningMeanStd(nn.Module):
 
 
 class RunningMeanStdObs(nn.Module):
-
     def __init__(self, insize, epsilon=1e-05, per_channel=False, norm_only=False):
         assert insize is dict
         super(RunningMeanStdObs, self).__init__()

@@ -176,7 +176,6 @@ class EgoGlassModel(BaseModel):
         self.scaler.scale(loss_total).backward()
 
     def optimize_parameters(self):
-
         # set model trainable
         self.net_HeatMap_left.train()
         self.net_HeatMap_right.train()

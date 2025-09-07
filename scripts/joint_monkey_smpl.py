@@ -27,7 +27,6 @@ def clamp(x, min_value, max_value):
 
 
 class AssetDesc:
-
     def __init__(self, file_name, flip_visual_attachments=False):
         self.file_name = file_name
         self.flip_visual_attachments = flip_visual_attachments
@@ -235,7 +234,6 @@ current_dof = 0
 print("Animating DOF %d ('%s')" % (current_dof, dof_names[current_dof]))
 
 while not gym.query_viewer_has_closed(viewer):
-
     # step the physics
     gym.simulate(sim)
     gym.fetch_results(sim, True)

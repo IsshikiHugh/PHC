@@ -39,7 +39,6 @@ def clamp(x, min_value, max_value):
 
 
 class AssetDesc:
-
     def __init__(self, file_name, flip_visual_attachments=False):
         self.file_name = file_name
         self.flip_visual_attachments = flip_visual_attachments

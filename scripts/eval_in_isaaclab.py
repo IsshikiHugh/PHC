@@ -260,7 +260,6 @@ class SMPLEnv(DirectRLEnv):
         light_cfg.func("/World/Light", light_cfg)
 
     def _load_motion(self, motion_file):
-
         time_steps = 1
         if self.humanoid_type == "smplx":
             self._has_upright_start = False
@@ -348,14 +347,12 @@ class SMPLEnv(DirectRLEnv):
         pass
 
     def _post_physics_step(self) -> None:
-
         pass
 
     def _apply_action(self) -> None:
         self.robot.set_joint_position_target(self.actions, joint_ids=None)
 
     def _get_observations(self) -> dict:
-
         motion_time = (self.episode_length_buf + 1) * self.step_dt + self._motion_time
 
         motion_res = self._motion_lib.get_motion_state(self._motion_id, motion_time)

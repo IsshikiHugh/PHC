@@ -164,9 +164,13 @@ def get_robot_states_from_torch_tensor(
     info = {}
     # the observation with quaternion-based representation
     torso_height = ts[..., 0, 1].cpu().numpy()
-    gttrny, gqny, vny, avny, info["root_yaw_inv"] = (
-        quaternion_math.compute_observation_return_info(global_quats, ts, vels, avels)
-    )
+    (
+        gttrny,
+        gqny,
+        vny,
+        avny,
+        info["root_yaw_inv"],
+    ) = quaternion_math.compute_observation_return_info(global_quats, ts, vels, avels)
     joint_obs = np.concatenate(
         [
             gttrny.cpu().numpy(),

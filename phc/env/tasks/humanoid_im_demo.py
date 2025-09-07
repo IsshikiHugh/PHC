@@ -19,7 +19,6 @@ import aiohttp, cv2, asyncio, json
 
 
 class HumanoidImDemo(humanoid_im.HumanoidIm):
-
     def __init__(
         self, cfg, sim_params, physics_engine, device_type, device_id, headless
     ):

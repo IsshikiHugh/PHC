@@ -35,7 +35,6 @@ def load_my_state_dict(target, saved_dict):
 
 
 class AMPAgent(common_agent.CommonAgent):
-
     def __init__(self, base_name, config):
         super().__init__(base_name, config)
 
@@ -188,8 +187,15 @@ class AMPAgent(common_agent.CommonAgent):
         batch_size = self.num_agents * self.num_actors
         mb_rnn_masks = None
 
-        mb_rnn_masks, indices, steps_mask, steps_state, play_mask, mb_rnn_states = (
-            self.init_rnn_step(batch_size, mb_rnn_states)
+        (
+            mb_rnn_masks,
+            indices,
+            steps_mask,
+            steps_state,
+            play_mask,
+            mb_rnn_states,
+        ) = self.init_rnn_step(
+            batch_size, mb_rnn_states
         )  # mb_rnn_states means "memory bank" rnn states
 
         ### ZL
@@ -198,7 +204,6 @@ class AMPAgent(common_agent.CommonAgent):
         reward_raw = torch.zeros(1, device=self.device)
 
         for n in range(self.horizon_length):
-
             self.obs = self.env_reset(done_indices)
 
             # self.rnn_states[0][:, :, -1] = n; print('debugg!!!!')
@@ -327,9 +332,9 @@ class AMPAgent(common_agent.CommonAgent):
         batch_dict["returns"] = a2c_common.swap_and_flatten01(mb_returns)
         batch_dict["rnn_states"] = mb_rnn_states
 
-        batch_dict["rnn_masks"] = (
-            mb_rnn_masks  # ZL: this should be swap and flattened, but it's all ones for now
-        )
+        batch_dict[
+            "rnn_masks"
+        ] = mb_rnn_masks  # ZL: this should be swap and flattened, but it's all ones for now
         batch_dict["terminated_flags"] = terminated_flags
         batch_dict["reward_raw"] = reward_raw / self.horizon_length
 
@@ -353,7 +358,6 @@ class AMPAgent(common_agent.CommonAgent):
         terminated_flags = torch.zeros(self.num_actors, device=self.device)
         reward_raw = torch.zeros(1, device=self.device)
         for n in range(self.horizon_length):
-
             self.obs = self.env_reset(done_indices)
             self.experience_buffer.update_data("obses", n, self.obs["obs"])
 
@@ -435,7 +439,6 @@ class AMPAgent(common_agent.CommonAgent):
         return batch_dict
 
     def prepare_dataset(self, batch_dict):
-
         dataset_dict = super().prepare_dataset(batch_dict)
         dataset_dict["amp_obs"] = batch_dict["amp_obs"]
         dataset_dict["amp_obs_demo"] = batch_dict["amp_obs_demo"]
@@ -620,7 +623,6 @@ class AMPAgent(common_agent.CommonAgent):
         return obs_batch_out
 
     def calc_gradients(self, input_dict):
-
         self.set_train()
         humanoid_env = self.vec_env.env.task
 
@@ -825,9 +827,9 @@ class AMPAgent(common_agent.CommonAgent):
         config = super()._build_net_config()
         config["amp_input_shape"] = self._amp_observation_space.shape
 
-        config["task_obs_size_detail"] = (
-            self.vec_env.env.task.get_task_obs_size_detail()
-        )
+        config[
+            "task_obs_size_detail"
+        ] = self.vec_env.env.task.get_task_obs_size_detail()
         if self.vec_env.env.task.has_task:
             config["self_obs_size"] = self.vec_env.env.task.get_self_obs_size()
             config["task_obs_size"] = self.vec_env.env.task.get_task_obs_size()

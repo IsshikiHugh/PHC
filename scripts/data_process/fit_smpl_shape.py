@@ -42,7 +42,6 @@ from tqdm import tqdm
 
 @hydra.main(version_base=None, config_path="../../phc/data/cfg", config_name="config")
 def main(cfg: DictConfig) -> None:
-
     humanoid_fk = Humanoid_Batch(cfg.robot)  # load forward kinematics model
 
     #### Define corresonpdances between h1 and smpl joints

@@ -50,7 +50,6 @@ if not USE_CACHE:
     old_numpy = torch.Tensor.numpy
 
     class Patch:
-
         def numpy(self):
             if self.is_cuda:
                 return self.to("cpu").numpy()
@@ -61,7 +60,6 @@ if not USE_CACHE:
 
 
 class MotionLibReal(MotionLibBase):
-
     def __init__(self, motion_lib_cfg):
         super().__init__(motion_lib_cfg=motion_lib_cfg)
         self.mesh_parsers = Humanoid_Batch(motion_lib_cfg.robot)
@@ -73,7 +71,6 @@ class MotionLibReal(MotionLibBase):
             return trans, 0
 
         with torch.no_grad():
-
             mesh_obj = mesh_parsers.mesh_fk(pose_aa[None, :1], trans[None, :1])
             height_diff = np.asarray(mesh_obj.vertices)[..., 2].min()
             trans[..., 2] -= height_diff

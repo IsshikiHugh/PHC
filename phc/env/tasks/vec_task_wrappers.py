@@ -60,6 +60,7 @@ class VecTaskPythonWrapper(VecTaskPython):
         return
 
     def reset(self, env_ids=None):
+        # [YX 9.5] env tracking.
         self.task.reset(env_ids)
         return torch.clamp(self.task.obs_buf, -self.clip_obs, self.clip_obs).to(
             self.rl_device

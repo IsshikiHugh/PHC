@@ -32,7 +32,6 @@ import wandb
 
 
 class CommonAgent(a2c_continuous.A2CAgent):
-
     def __init__(self, base_name, config):
         a2c_common.A2CBase.__init__(self, base_name, config)
         self.cfg = config
@@ -164,7 +163,6 @@ class CommonAgent(a2c_continuous.A2CAgent):
                 train_info_dict = self._assemble_train_info(train_info, frame)
                 self.algo_observer.after_print_stats(frame, epoch_num, total_time)
                 if self.save_freq > 0:
-
                     if epoch_num % min(50, self.save_best_after) == 0:
                         self.save(model_output_file)
 
@@ -717,7 +715,6 @@ class CommonAgent(a2c_continuous.A2CAgent):
         return train_info_dict
 
     def _log_train_info(self, train_info, frame):
-
         for k, v in train_info.items():
             self.writer.add_scalar(k, v, self.epoch_num)
 
@@ -731,7 +728,6 @@ class CommonAgent(a2c_continuous.A2CAgent):
 
 
 class CommonDiscreteAgent(a2c_discrete.DiscreteA2CAgent):
-
     def __init__(self, base_name, config):
         a2c_common.DiscreteA2CBase.__init__(self, base_name, config)
         self.cfg = config
@@ -855,7 +851,6 @@ class CommonDiscreteAgent(a2c_discrete.DiscreteA2CAgent):
                 train_info_dict = self._assemble_train_info(train_info, frame)
                 self.algo_observer.after_print_stats(frame, epoch_num, total_time)
                 if self.save_freq > 0:
-
                     if epoch_num % min(50, self.save_best_after) == 0:
                         self.save(model_output_file)
 
@@ -1251,7 +1246,6 @@ class CommonDiscreteAgent(a2c_discrete.DiscreteA2CAgent):
         return train_info_dict
 
     def _log_train_info(self, train_info, frame):
-
         for k, v in train_info.items():
             self.writer.add_scalar(k, v, self.epoch_num)
 

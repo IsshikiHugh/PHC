@@ -29,7 +29,6 @@ import argparse
 
 
 def run(in_file: str, out_file: str):
-
     robot_cfg = {
         "mesh": False,
         "model": "smpl",

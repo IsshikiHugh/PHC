@@ -73,7 +73,6 @@ class IMAmpAgent(amp_agent.AMPAgent):
             return current_action
 
     def env_eval_step(self, env, actions):
-
         if not self.is_tensor_obses:
             actions = actions.cpu().numpy()
 
@@ -181,9 +180,9 @@ class IMAmpAgent(amp_agent.AMPAgent):
             )
             humanoid_env._recovery_episode_prob, humanoid_env._fall_init_prob = 0, 0
 
-        humanoid_env._termination_distances[:] = (
-            0.5  # if not humanoid_env.strict_eval else 0.25 # ZL: use UHC's termination distance
-        )
+        humanoid_env._termination_distances[
+            :
+        ] = 0.5  # if not humanoid_env.strict_eval else 0.25 # ZL: use UHC's termination distance
         humanoid_env.cycle_motion = False
         humanoid_env.zero_out_far = False
         flags.test, flags.im_eval = (
@@ -425,9 +424,9 @@ class IMAmpAgent(amp_agent.AMPAgent):
                     "success_keys": success_keys,
                 }
 
-            done[:] = (
-                1  # Turning all of the sequences done and reset for the next batch of eval.
-            )
+            done[
+                :
+            ] = 1  # Turning all of the sequences done and reset for the next batch of eval.
 
             humanoid_env.forward_motion_samples()
             self.terminate_state = torch.zeros(

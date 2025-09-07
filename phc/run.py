@@ -105,7 +105,6 @@ def create_rlgpu_env(**kwargs):
 
 
 class RLGPUAlgoObserver(AlgoObserver):
-
     def __init__(self, use_successes=True):
         self.use_successes = use_successes
         return
@@ -152,7 +151,6 @@ class RLGPUAlgoObserver(AlgoObserver):
 
 
 class RLGPUEnv(vecenv.IVecEnv):
-
     def __init__(self, config_name, num_actors, **kwargs):
         self.env = env_configurations.configurations[config_name]["env_creator"](
             **kwargs

@@ -66,7 +66,6 @@ from tqdm import tqdm
 
 # Base class for RL tasks
 class BaseTask:
-
     def __init__(self, cfg, enable_camera_sensors=False):
         self.headless = cfg["headless"]
         if self.headless == False and not flags.no_virtual_display:
@@ -392,7 +391,6 @@ class BaseTask:
 
             # check for keyboard events
             for evt in self.gym.query_viewer_action_events(self.viewer):
-
                 if evt.action == "QUIT" and evt.value > 0:
                     sys.exit()
                 if evt.action == "PAUSE" and evt.value > 0:
@@ -824,13 +822,14 @@ class BaseTask:
                             for attr, attr_randomization_params in prop_attrs.items():
                                 smpl = None
                                 if self.actor_params_generator is not None:
-                                    smpl, extern_offsets[env_id] = (
-                                        get_attr_val_from_sample(
-                                            extern_sample,
-                                            extern_offsets[env_id],
-                                            p,
-                                            attr,
-                                        )
+                                    (
+                                        smpl,
+                                        extern_offsets[env_id],
+                                    ) = get_attr_val_from_sample(
+                                        extern_sample,
+                                        extern_offsets[env_id],
+                                        p,
+                                        attr,
                                     )
                                 apply_random_samples(
                                     p,

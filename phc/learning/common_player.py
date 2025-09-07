@@ -11,7 +11,6 @@ from gym import spaces
 
 
 class CommonPlayer(players.PpoPlayerContinuous):
-
     def __init__(self, config):
         BasePlayer.__init__(self, config)
         self.network = config["network"]
@@ -69,7 +68,6 @@ class CommonPlayer(players.PpoPlayerContinuous):
 
             with torch.no_grad():
                 for n in range(self.max_steps):
-
                     obs_dict = self.env_reset(done_indices)
 
                     if has_masks:
@@ -252,7 +250,6 @@ class CommonPlayer(players.PpoPlayerContinuous):
 
 
 class CommonPlayerDiscrete(players.PpoPlayerDiscrete):
-
     def __init__(self, config):
         BasePlayer.__init__(self, config)
         self.network = config["network"]
@@ -310,7 +307,6 @@ class CommonPlayerDiscrete(players.PpoPlayerDiscrete):
 
             with torch.no_grad():
                 for n in range(self.max_steps):
-
                     obs_dict = self.env_reset(done_indices)
 
                     if has_masks:

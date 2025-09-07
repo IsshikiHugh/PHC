@@ -1033,7 +1033,7 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
 
         self.self_obs_buf[env_ids] = self_obs
 
-        if self._enable_task_obs:
+        if self._enable_task_obs:  # [YX 9.5] True.
             task_obs = self._compute_task_obs(env_ids)
             obs = torch.cat([self_obs, task_obs], dim=-1)
         else:
