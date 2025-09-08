@@ -203,7 +203,6 @@ class HumanoidAMP(Humanoid):
         if env_ids is None:
             env_ids = torch.arange(self.num_envs).to(self.device)
         obs = self._compute_humanoid_obs(env_ids)
-        set_trace()  # [YX 9.7]
 
         if self.obs_v == 2:
             # Double sub will return a copy.
@@ -923,8 +922,7 @@ class HumanoidAMP(Humanoid):
         obs = super()._compute_humanoid_obs(env_ids)
 
         # [YX 9.5] False for rot+kp AMASS eval.
-        set_trace()  # [YX 9.7]
-        if self._enable_hist_obs:
+        if self._enable_hist_obs:  # False
             if env_ids is None:
                 hist_obs = self._amp_obs_buf.view(-1, self.get_num_amp_obs())
             else:

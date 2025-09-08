@@ -1074,7 +1074,7 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
 
         curr_gender_betas = self.humanoid_shapes[env_ids]
 
-        if self._fut_tracks:
+        if self._fut_tracks:  # False̦
             time_steps = self._num_traj_samples
             B = env_ids.shape[0]
             time_internals = (
@@ -1097,7 +1097,6 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
                 .repeat_interleave(time_steps, dim=0)
                 .view(-1, 3),
             )  # pass in the env_ids such that the motion is in synced.
-
         else:
             motion_times = (
                 (self.progress_buf[env_ids] + 1) * self.dt
@@ -1214,7 +1213,7 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
             or self.obs_v == 8
             or self.obs_v == 9
         ):
-            if self.zero_out_far:
+            if self.zero_out_far:  # False
                 close_distance = self.close_distance
                 distance = torch.norm(root_pos - ref_rb_pos_subset[..., 0, :], dim=-1)
 
@@ -1241,8 +1240,7 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
                     / distance[vector_zero_subset, None]
                     * far_distance
                 ) + body_pos_subset[vector_zero_subset, 0]
-
-            if self._occl_training:
+            if self._occl_training:  # False
                 # ranomly occlude some of the body parts
                 random_occlu_idx = self.random_occlu_idx[env_ids]
                 ref_rb_pos_subset[random_occlu_idx] = body_pos_subset[random_occlu_idx]
@@ -1253,8 +1251,8 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
                 ref_body_ang_vel_subset[random_occlu_idx] = body_ang_vel_subset[
                     random_occlu_idx
                 ]
-
             if self.obs_v == 4 or self.obs_v == 6:
+                set_trace()  # [YX 9.7] Check the size of the obs.
                 obs = compute_imitation_observations_v6(
                     root_pos,
                     root_rot,
@@ -1269,10 +1267,8 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
                     time_steps,
                     self._has_upright_start,
                 )
-
                 # obs[:, -1] = env_ids.clone().float(); print('debugging')
                 # obs[:, -2] = self.progress_buf[env_ids].clone().float(); print('debugging')
-
             elif self.obs_v == 5:
                 obs = compute_imitation_observations_v6(
                     root_pos,
@@ -1290,7 +1286,6 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
                 )
                 one_hots = self._motion_lib.one_hot_motions[env_ids]
                 obs = torch.cat([obs, one_hots], dim=-1)
-
             elif self.obs_v == 8:
                 obs = compute_imitation_observations_v8(
                     root_pos,
@@ -1324,7 +1319,7 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
                     self._has_upright_start,
                 )
 
-            if self._fut_tracks_dropout and not flags.test:
+            if self._fut_tracks_dropout and not flags.test:  # False
                 dropout_rate = 0.1
                 curr_num_envs = env_ids.shape[0]
                 obs = obs.view(curr_num_envs, self._num_traj_samples, -1)
@@ -1375,13 +1370,12 @@ class HumanoidIm(humanoid_amp_task.HumanoidAMPTask):
             )
 
         if save_buffer:
-            if self._fut_tracks:
+            if self._fut_tracks:  # [YX 9.7] False
                 self.ref_body_pos[env_ids] = ref_rb_pos[..., 0, :, :]
                 self.ref_body_vel[env_ids] = ref_body_vel[..., 0, :, :]
                 self.ref_body_rot[env_ids] = ref_rb_rot[..., 0, :, :]
                 self.ref_body_pos_subset[env_ids] = ref_rb_pos_subset[..., 0, :, :]
                 self.ref_dof_pos[env_ids] = ref_dof_pos[..., 0, :]
-
             else:
                 self.ref_body_pos[env_ids] = ref_rb_pos
                 self.ref_body_vel[env_ids] = ref_body_vel
